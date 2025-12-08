@@ -192,14 +192,9 @@ const Index = () => {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-6"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-                    <p className="text-muted-foreground">Overview of your shipments</p>
-                  </div>
-                  <Button variant="hero" onClick={handleNewQuote}>
-                    <Plus className="w-4 h-4" /> New Quote
-                  </Button>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+                  <p className="text-muted-foreground">Overview of your shipments</p>
                 </div>
 
                 <DashboardStats
