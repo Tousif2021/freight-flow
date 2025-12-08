@@ -230,74 +230,167 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             </div>
           </div>
 
-          {/* Clean Route Bar with traffic segments */}
-          <div className="pt-3 border-t border-border/30">
-            {/* Route visualization */}
-            <div className="relative flex items-center gap-3">
-              {/* Origin */}
+          {/* Segmented Route Traffic Bar */}
+          <div className="pt-4 border-t border-border/30">
+            {/* Route header */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-medium">Route Analysis</span>
               <div className="flex items-center gap-1.5">
-                <motion.div
-                  className="w-2.5 h-2.5 rounded-full bg-teal"
-                  animate={{ boxShadow: ['0 0 0 0 hsl(var(--teal) / 0.3)', '0 0 0 4px hsl(var(--teal) / 0)'] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
+                <motion.div 
+                  className="w-1.5 h-1.5 rounded-full bg-teal"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
-                <span className="text-[10px] font-semibold text-foreground">{originCity}</span>
+                <span className="text-[8px] text-muted-foreground">Live traffic data</span>
               </div>
-              
-              {/* Segmented progress bar */}
-              <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden flex">
-                {/* Green segment - LA to Midwest (clear) */}
+            </div>
+
+            {/* Main segmented bar */}
+            <div className="relative">
+              {/* Origin/Destination labels */}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-semibold text-foreground">{originCity}</span>
+                <span className="text-[10px] font-semibold text-foreground">{destinationCity}</span>
+              </div>
+
+              {/* Primary route bar - segmented blocks */}
+              <div className="h-3 rounded bg-muted/10 overflow-hidden flex gap-[1px] p-[1px]">
+                {/* LA → Rockies (Green - Stable) */}
                 <motion.div 
-                  className="h-full bg-teal"
-                  style={{ width: '45%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                />
-                {/* Yellow segment - Midwest (moderate) */}
-                <motion.div 
-                  className="h-full bg-amber"
-                  style={{ width: '25%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.4, duration: 0.3 }}
-                />
-                {/* Red segment - NYC approach (congestion) */}
-                <motion.div 
-                  className="h-full bg-red-500 relative overflow-hidden"
-                  style={{ width: '30%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.6, duration: 0.3 }}
+                  className="h-full rounded-l bg-teal relative overflow-hidden"
+                  style={{ width: '20%' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
                 >
                   <motion.div 
-                    className="absolute inset-0 bg-white/20"
-                    animate={{ opacity: [0, 0.3, 0] }}
+                    className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0"
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  />
+                </motion.div>
+
+                {/* Rockies → Midwest (Amber - Uncertainty) */}
+                <motion.div 
+                  className="h-full bg-amber relative"
+                  style={{ width: '20%' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-white/10"
+                    animate={{ opacity: [0, 0.2, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                </motion.div>
+
+                {/* Midwest (Green - Stable) */}
+                <motion.div 
+                  className="h-full bg-teal relative overflow-hidden"
+                  style={{ width: '25%' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0"
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 0.5 }}
+                  />
+                </motion.div>
+
+                {/* Plains (Amber - Uncertainty) */}
+                <motion.div 
+                  className="h-full bg-amber relative"
+                  style={{ width: '15%' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-white/10"
+                    animate={{ opacity: [0, 0.2, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                  />
+                </motion.div>
+
+                {/* NYC Approach (Red - Confirmed Congestion) */}
+                <motion.div 
+                  className="h-full rounded-r bg-red-500 relative overflow-hidden"
+                  style={{ width: '20%' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-red-400/40"
+                    animate={{ opacity: [0.2, 0.5, 0.2] }}
                     transition={{ duration: 1.2, repeat: Infinity }}
                   />
                 </motion.div>
               </div>
-              
-              {/* Destination */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-foreground">{destinationCity}</span>
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+
+              {/* Region labels */}
+              <div className="flex mt-1" style={{ paddingLeft: '2px', paddingRight: '2px' }}>
+                <span className="text-[7px] text-muted-foreground/60 font-medium" style={{ width: '20%' }}>Rockies</span>
+                <span className="text-[7px] text-muted-foreground/60 font-medium" style={{ width: '20%' }}>West</span>
+                <span className="text-[7px] text-muted-foreground/60 font-medium" style={{ width: '25%' }}>Midwest</span>
+                <span className="text-[7px] text-muted-foreground/60 font-medium" style={{ width: '15%' }}>Plains</span>
+                <span className="text-[7px] text-red-400/80 font-semibold text-right" style={{ width: '20%' }}>NYC</span>
+              </div>
+
+              {/* Secondary rail - Traffic density */}
+              <div className="mt-2.5 flex items-center gap-2">
+                <span className="text-[7px] text-muted-foreground/50 uppercase tracking-wider w-12">Density</span>
+                <div className="flex-1 h-1 rounded-full bg-muted/10 overflow-hidden flex gap-[1px]">
+                  <div className="h-full bg-teal/40" style={{ width: '20%' }} />
+                  <div className="h-full bg-amber/50" style={{ width: '20%' }} />
+                  <div className="h-full bg-teal/30" style={{ width: '25%' }} />
+                  <div className="h-full bg-amber/40" style={{ width: '15%' }} />
+                  <motion.div 
+                    className="h-full bg-red-500/60"
+                    style={{ width: '20%' }}
+                    animate={{ opacity: [0.6, 0.9, 0.6] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                </div>
+              </div>
+
+              {/* Origin/Destination markers */}
+              <div className="absolute top-[22px] -left-1">
+                <motion.div
+                  className="w-3 h-3 rounded-full bg-teal border-2 border-background shadow-sm"
+                  animate={{ boxShadow: ['0 0 0 0 hsl(var(--teal) / 0.4)', '0 0 0 4px hsl(var(--teal) / 0)'] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              </div>
+              <div className="absolute top-[22px] -right-1">
+                <motion.div
+                  className="w-3 h-3 rounded-full bg-red-500 border-2 border-background shadow-sm"
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
               </div>
             </div>
-            
+
             {/* Legend */}
-            <div className="flex items-center justify-center gap-4 mt-2">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-teal" />
-                <span className="text-[8px] text-muted-foreground">Clear</span>
+            <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/20">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-1.5 rounded-sm bg-teal" />
+                <span className="text-[8px] text-muted-foreground">Stable Flow</span>
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-amber" />
-                <span className="text-[8px] text-muted-foreground">Moderate</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-1.5 rounded-sm bg-amber" />
+                <span className="text-[8px] text-muted-foreground">Uncertainty</span>
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-[8px] text-muted-foreground">Congestion</span>
+              <div className="flex items-center gap-1.5">
+                <motion.div 
+                  className="w-2.5 h-1.5 rounded-sm bg-red-500"
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+                <span className="text-[8px] text-red-400/80">Congestion</span>
               </div>
             </div>
           </div>
