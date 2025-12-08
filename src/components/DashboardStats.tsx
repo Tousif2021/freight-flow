@@ -70,15 +70,15 @@ const StatCard: React.FC<{
           </div>
         )}
       </div>
-      <motion.div 
-        className="text-3xl font-bold text-foreground mb-1"
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
-      >
-        {value}
-      </motion.div>
-      <div className="text-sm text-muted-foreground">{label}</div>
+              <motion.div 
+                className="text-3xl font-bold tracking-tight text-foreground mb-1 font-mono"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
+              >
+                {value}
+              </motion.div>
+              <div className="text-sm font-medium text-muted-foreground">{label}</div>
     </div>
   </motion.div>
 );
@@ -138,7 +138,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
               <Sparkles className="w-5 h-5 text-primary" />
               <span className="text-xs font-medium text-primary uppercase tracking-wider">Live Overview</span>
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-1">Shipment Operations</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground mb-1">Shipment Operations</h2>
             <p className="text-sm text-muted-foreground">Real-time visibility across your logistics network</p>
           </div>
           
@@ -239,7 +239,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
             </div>
             <div className="flex items-end gap-2 mb-4">
               <motion.span 
-                className="text-4xl font-bold text-foreground"
+                className="text-4xl font-bold tracking-tight text-foreground font-mono"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
@@ -277,7 +277,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
             </div>
             <div className="flex items-end gap-2 mb-4">
               <motion.span 
-                className="text-4xl font-bold text-foreground"
+                className="text-4xl font-bold tracking-tight text-foreground font-mono"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
@@ -307,7 +307,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
         className="glass-card p-5"
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
             <Package className="w-5 h-5 text-primary" />
             Recent Shipments
           </h3>
@@ -339,7 +339,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
                     {getStatusIcon(shipment.status)}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                    <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2 font-mono">
                       {shipment.trackingNumber}
                       <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>

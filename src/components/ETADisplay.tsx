@@ -171,7 +171,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
           </div>
 
           <div className="flex items-end gap-2 mb-3">
-            <motion.span className="text-4xl font-black text-primary tracking-tight" animate={{ textShadow: ['0 0 15px hsl(var(--primary) / 0)', '0 0 25px hsl(var(--primary) / 0.4)', '0 0 15px hsl(var(--primary) / 0)'] }} transition={{ duration: 2, repeat: Infinity }}>
+            <motion.span className="text-4xl font-black text-primary tracking-tight font-mono" animate={{ textShadow: ['0 0 15px hsl(var(--primary) / 0)', '0 0 25px hsl(var(--primary) / 0.4)', '0 0 15px hsl(var(--primary) / 0)'] }} transition={{ duration: 2, repeat: Infinity }}>
               {formatTime(eta.estimatedArrival)}
             </motion.span>
             <div className="pb-1">

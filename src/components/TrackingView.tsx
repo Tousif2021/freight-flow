@@ -100,8 +100,8 @@ const TrackingView: React.FC<TrackingViewProps> = ({ shipment }) => {
                 {shipment.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-1">
-              Tracking: {shipment.trackingNumber}
+            <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
+              Tracking: <span className="font-mono">{shipment.trackingNumber}</span>
             </h2>
             <p className="text-sm text-muted-foreground">
               Created {formatDate(shipment.createdAt)}
@@ -164,7 +164,7 @@ const TrackingView: React.FC<TrackingViewProps> = ({ shipment }) => {
           <h3 className="text-sm font-semibold text-muted-foreground mb-2">
             Estimated Arrival
           </h3>
-          <div className="text-3xl font-bold text-foreground mb-2">
+          <div className="text-3xl font-bold tracking-tight text-foreground mb-2 font-mono">
             {formatDate(shipment.eta.estimatedArrival)}
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -232,7 +232,7 @@ const TrackingView: React.FC<TrackingViewProps> = ({ shipment }) => {
 
       {/* Event Timeline */}
       <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Shipment History</h3>
+        <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">Shipment History</h3>
         
         <div className="space-y-4">
           {shipment.events.map((event, index) => (
