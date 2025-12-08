@@ -128,8 +128,9 @@ const Index = () => {
             {navItems.map((item) => (
               <Button
                 key={item.id}
-                variant={view === item.id ? 'default' : 'ghost'}
+                variant={item.id === 'quote' ? 'hero' : (view === item.id ? 'default' : 'ghost')}
                 size="sm"
+                className={item.id === 'quote' ? 'border border-primary/30' : ''}
                 onClick={() => item.id === 'quote' ? handleNewQuote() : setView(item.id as View)}
               >
                 <item.icon className="w-4 h-4" />
@@ -162,8 +163,8 @@ const Index = () => {
                 {navItems.map((item) => (
                   <Button
                     key={item.id}
-                    variant={view === item.id ? 'default' : 'ghost'}
-                    className="justify-start"
+                    variant={item.id === 'quote' ? 'hero' : (view === item.id ? 'default' : 'ghost')}
+                    className={cn("justify-start", item.id === 'quote' && 'border border-primary/30')}
                     onClick={() => {
                       item.id === 'quote' ? handleNewQuote() : setView(item.id as View);
                       setMobileMenuOpen(false);
