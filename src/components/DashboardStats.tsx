@@ -216,7 +216,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
                 </div>
                 <div className="text-right">
                   <div className={cn(
-                    'text-xs font-medium px-2 py-1 rounded-full',
+                    'text-xs font-medium px-2 py-1 rounded-full text-center',
                     shipment.status === 'delivered' && 'bg-success/20 text-success',
                     shipment.status === 'in_transit' && 'bg-primary/20 text-primary',
                     shipment.status === 'delayed' && 'bg-destructive/20 text-destructive',
