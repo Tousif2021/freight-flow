@@ -100,6 +100,7 @@ const AddressInput: React.FC<AddressInputProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [hasSelected, setHasSelected] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -115,6 +116,12 @@ const AddressInput: React.FC<AddressInputProps> = ({
   }, []);
 
   useEffect(() => {
+    // Skip geocoding if user just selected an address
+    if (hasSelected) {
+      setHasSelected(false);
+      return;
+    }
+
     if (!query || query.length < 2) {
       setResults([]);
       setIsOpen(false);
@@ -126,7 +133,7 @@ const AddressInput: React.FC<AddressInputProps> = ({
       try {
         const data = await mockGeocode(query);
         setResults(data);
-        setIsOpen(data.length > 0);
+        setIsOpen(data.length > 0 && isFocused);
       } catch (error) {
         console.error('Geocoding error:', error);
       } finally {
@@ -135,11 +142,13 @@ const AddressInput: React.FC<AddressInputProps> = ({
     }, 200);
 
     return () => clearTimeout(searchTimeout);
-  }, [query]);
+  }, [query, hasSelected, isFocused]);
 
   const handleSelect = (location: LocationResult) => {
+    setHasSelected(true);
     onChange(location);
     setQuery(`${location.address}, ${location.city}, ${location.state}`);
+    setResults([]);
     setIsOpen(false);
   };
 
