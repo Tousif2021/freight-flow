@@ -230,7 +230,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             </div>
           </div>
 
-          {/* Clean Route Bar */}
+          {/* Clean Route Bar with traffic segments */}
           <div className="pt-3 border-t border-border/30">
             {/* Route visualization */}
             <div className="relative flex items-center gap-3">
@@ -244,14 +244,38 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                 <span className="text-[10px] font-semibold text-foreground">{originCity}</span>
               </div>
               
-              {/* Progress bar */}
-              <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
+              {/* Segmented progress bar */}
+              <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden flex">
+                {/* Green segment - LA to Midwest (clear) */}
                 <motion.div 
-                  className="h-full bg-gradient-to-r from-teal via-amber to-red-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-teal"
+                  style={{ width: '45%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
                 />
+                {/* Yellow segment - Midwest (moderate) */}
+                <motion.div 
+                  className="h-full bg-amber"
+                  style={{ width: '25%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.4, duration: 0.3 }}
+                />
+                {/* Red segment - NYC approach (congestion) */}
+                <motion.div 
+                  className="h-full bg-red-500 relative overflow-hidden"
+                  style={{ width: '30%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-white/20"
+                    animate={{ opacity: [0, 0.3, 0] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                  />
+                </motion.div>
               </div>
               
               {/* Destination */}
@@ -261,9 +285,21 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
               </div>
             </div>
             
-            <p className="text-[9px] text-muted-foreground/70 mt-2 text-center">
-              Congestion expected in Midwest → NYC corridor
-            </p>
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-4 mt-2">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-teal" />
+                <span className="text-[8px] text-muted-foreground">Clear</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-amber" />
+                <span className="text-[8px] text-muted-foreground">Moderate</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-[8px] text-muted-foreground">Congestion</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
