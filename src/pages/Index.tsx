@@ -113,13 +113,13 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-glow">
               <Truck className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">FreightFlow</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Enterprise Logistics</p>
+              <h1 className="text-lg font-bold tracking-tight text-foreground">FreightFlow</h1>
+              <p className="text-xs font-medium text-muted-foreground hidden sm:block tracking-wide uppercase">Enterprise Logistics</p>
             </div>
           </div>
 
@@ -194,8 +194,8 @@ const Index = () => {
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-                  <p className="text-muted-foreground">Overview of your shipments</p>
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
+                  <p className="text-muted-foreground font-medium">Overview of your shipments</p>
                 </div>
 
                 <DashboardStats
@@ -233,7 +233,7 @@ const Index = () => {
                           exit={{ opacity: 0, x: -20 }}
                           className="glass-card p-6"
                         >
-                          <h2 className="text-xl font-bold text-foreground mb-6">Get a Quote</h2>
+                          <h2 className="text-xl font-bold tracking-tight text-foreground mb-6">Get a Quote</h2>
                           
                           <div className="space-y-4 mb-6">
                             <AddressInput
