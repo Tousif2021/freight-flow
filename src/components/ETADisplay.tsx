@@ -201,7 +201,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
           }} transition={{
             duration: 2,
             repeat: Infinity
-          }} className="text-4xl font-black text-primary tracking-tight font-mono">
+          }} className="text-primary tracking-tight font-sans text-center text-5xl font-extrabold">
               {formatTime(eta.estimatedArrival)}
             </motion.span>
             <div className="pb-1">
