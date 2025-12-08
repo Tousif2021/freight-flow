@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, AlertTriangle, MapPin, Truck, Route, Calendar, CloudSnow, Loader2, Shield, Activity, Satellite, ChevronsUpDown, Check, TrendingDown, TrendingUp } from 'lucide-react';
+import { Clock, AlertTriangle, MapPin, Truck, Route, Calendar, CloudSnow, Loader2, Shield, Activity, Satellite, ChevronsUpDown, Check, Radio } from 'lucide-react';
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
 import LivePulseIndicator from './LivePulseIndicator';
@@ -77,6 +77,21 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
   const trafficFactor = eta.factors.find(f => f.name.toLowerCase().includes('traffic'));
   const dayFactor = eta.factors.find(f => f.name.toLowerCase().includes('day') || f.name.toLowerCase().includes('week'));
   const weatherFactor = eta.factors.find(f => f.name.toLowerCase().includes('weather'));
+
+  // Card hover animation variants
+  const cardHoverVariants = {
+    rest: { scale: 1, y: 0 },
+    hover: { 
+      scale: 1.02, 
+      y: -2,
+      transition: { duration: 0.2, ease: "easeOut" }
+    }
+  };
+
+  const iconHoverVariants = {
+    rest: { rotate: 0 },
+    hover: { rotate: [0, -10, 10, 0], transition: { duration: 0.4 } }
+  };
 
   return (
     <motion.div
@@ -215,23 +230,76 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             </div>
           </div>
 
-          {/* Enhanced Route Bar with tick labels */}
+          {/* Enhanced Route Bar with segment visualization */}
           <div className="pt-3 border-t border-border/30">
-            <div className="flex justify-between text-[8px] font-semibold mb-1">
+            <div className="flex justify-between text-[8px] font-semibold mb-1.5">
               <span className="text-teal">{originCity.slice(0, 2).toUpperCase()}</span>
               <span className="text-amber">Midwest</span>
               <span className="text-red-400">{destinationCity.slice(0, 3).toUpperCase()}</span>
             </div>
-            <div className="relative flex items-center gap-2">
+            
+            {/* Route visualization with segments */}
+            <div className="relative">
+              {/* Background track */}
+              <div className="h-2 rounded-full bg-muted/20 overflow-hidden flex">
+                {/* LA to Midwest segment - green/teal */}
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-teal to-teal/80 relative"
+                  style={{ width: '40%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <motion.div 
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                </motion.div>
+                
+                {/* Midwest segment - amber/warning */}
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-amber/80 to-amber relative"
+                  style={{ width: '30%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-amber/30"
+                    animate={{ opacity: [0, 0.5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </motion.div>
+                
+                {/* Midwest to NYC segment - red/danger */}
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-red-500/80 to-red-500 relative"
+                  style={{ width: '30%' }}
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 bg-red-400/30"
+                    animate={{ opacity: [0, 0.6, 0] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                  />
+                </motion.div>
+              </div>
+              
+              {/* Origin marker */}
               <motion.div
-                className="w-2.5 h-2.5 rounded-full bg-teal"
+                className="absolute -left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-teal border-2 border-background"
                 animate={{ boxShadow: ['0 0 0 0 hsl(var(--teal) / 0.4)', '0 0 0 4px hsl(var(--teal) / 0)'] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
-              <div className="flex-1 h-1 bg-gradient-to-r from-teal via-amber to-red-500 rounded-full" />
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              
+              {/* Destination marker */}
+              <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-red-500 border-2 border-background" />
             </div>
-            <p className="text-[9px] text-muted-foreground mt-1.5 text-center">
+            
+            <p className="text-[9px] text-muted-foreground mt-2 text-center">
               Major delays predicted in Midwest and NYC corridor
             </p>
           </div>
@@ -254,21 +322,27 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
         </div>
 
         <div className="p-2 space-y-1.5">
-          {/* Carrier Mode Card - Neutral slate bg */}
+          {/* Carrier Mode Card - Neutral slate bg with hover */}
           {carrierFactor && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
+              variants={cardHoverVariants}
+              whileHover="hover"
               transition={{ delay: 0.05 }}
-              className="relative rounded-lg p-3 border bg-slate-700/50 border-red-500/30"
+              className="relative rounded-lg p-3 border bg-slate-700/50 border-red-500/30 cursor-pointer group"
             >
-              <div className="flex items-center gap-2">
+              <motion.div 
+                className="absolute inset-0 bg-red-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
+              <div className="relative flex items-center gap-2">
                 <motion.div
                   className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/20"
+                  variants={iconHoverVariants}
                   animate={{ boxShadow: ['0 0 0 0 rgba(239,68,68,0.3)', '0 0 0 6px rgba(239,68,68,0)', '0 0 0 0 rgba(239,68,68,0)'] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <Truck className="w-4 h-4 text-red-400" />
+                  <Truck className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
@@ -278,64 +352,95 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                   <p className="text-[9px] text-red-300/70">{carrierFactor.description}</p>
                   <p className="text-[9px] text-amber/80 font-medium mt-1">💡 AI suggests direct truckload to save ~9–11h</p>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20">
+                <motion.div 
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 group-hover:bg-red-500/30 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                >
                   <Truck className="w-3 h-3 text-red-400" />
                   <Clock className="w-2.5 h-2.5 text-red-400" />
                   <span className="text-[10px] font-black text-red-400">+{carrierFactor.adjustment.toFixed(1)}h</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* Traffic Conditions Card - Purple-slate bg */}
+          {/* Traffic Conditions Card - with live feed indicator */}
           {trafficFactor && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
+              variants={cardHoverVariants}
+              whileHover="hover"
               transition={{ delay: 0.1 }}
-              className="relative rounded-lg p-3 border bg-slate-800/50 border-red-500/30"
+              className="relative rounded-lg p-3 border bg-slate-800/50 border-red-500/30 cursor-pointer group"
             >
-              <div className="flex items-center gap-2">
+              <motion.div 
+                className="absolute inset-0 bg-red-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
+              <div className="relative flex items-center gap-2">
                 <motion.div
                   className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/20"
+                  variants={iconHoverVariants}
                   animate={{ boxShadow: ['0 0 0 0 rgba(239,68,68,0.3)', '0 0 0 6px rgba(239,68,68,0)', '0 0 0 0 rgba(239,68,68,0)'] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <Route className="w-4 h-4 text-red-400" />
+                  <Route className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[11px] font-bold text-red-400">Traffic</span>
                     <span className="px-1.5 py-0.5 bg-red-500/30 text-red-300 text-[8px] font-black uppercase rounded">HIGH IMPACT</span>
+                    {/* Live Feed Indicator */}
+                    <div className="flex items-center gap-1 ml-1">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <Radio className="w-2.5 h-2.5 text-red-400" />
+                      </motion.div>
+                      <span className="text-[7px] text-red-400/70 uppercase font-semibold">Live</span>
+                    </div>
                   </div>
                   <p className="text-[9px] text-red-300/70">Evening congestion forecast at NYC entry window</p>
                   {/* Mini timeline bar */}
                   <div className="flex items-center gap-0.5 mt-2">
                     <div className="flex-1 h-0.5 bg-muted/30 rounded-full relative">
-                      <div className="absolute right-1/4 -top-1.5 w-1.5 h-1.5 bg-red-400 rounded-full" />
+                      <motion.div 
+                        className="absolute right-1/4 -top-1.5 w-1.5 h-1.5 bg-red-400 rounded-full"
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
                       <span className="absolute right-1/4 -top-5 text-[7px] text-red-400 font-semibold transform -translate-x-1/2">NYC</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20">
+                <motion.div 
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 group-hover:bg-red-500/30 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                >
                   <Route className="w-3 h-3 text-red-400" />
                   <span className="text-[10px] font-black text-red-400">+{trafficFactor.adjustment.toFixed(1)}h</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* Day of Week Card - Soft teal bg */}
+          {/* Day of Week Card - Soft teal bg with hover */}
           {dayFactor && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
+              variants={cardHoverVariants}
+              whileHover="hover"
               transition={{ delay: 0.15 }}
-              className="relative rounded-lg p-3 border bg-teal/10 border-teal/30"
+              className="relative rounded-lg p-3 border bg-teal/10 border-teal/30 cursor-pointer group"
             >
-              <div className="flex items-center gap-2">
+              <motion.div 
+                className="absolute inset-0 bg-teal/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
+              <div className="relative flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal/20">
-                  <Calendar className="w-4 h-4 text-teal" />
+                  <Calendar className="w-4 h-4 text-teal group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
@@ -344,21 +449,26 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                   </div>
                   <p className="text-[9px] text-teal/70">Standard weekday operations (no holiday impact)</p>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded bg-teal/20">
+                <motion.div 
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-teal/20 group-hover:bg-teal/30 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                >
                   <Check className="w-3 h-3 text-teal" />
                   <span className="text-[10px] font-black text-teal">± 0.0 h</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* Weather Card - With grain overlay */}
+          {/* Weather Card - With grain overlay and live feed */}
           {weatherFactor && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
+              variants={cardHoverVariants}
+              whileHover="hover"
               transition={{ delay: 0.2 }}
-              className="relative rounded-lg p-3 border bg-slate-700/50 border-amber/30 overflow-hidden"
+              className="relative rounded-lg p-3 border bg-slate-700/50 border-amber/30 overflow-hidden cursor-pointer group"
             >
               {/* Subtle diagonal grain overlay */}
               <div 
@@ -367,22 +477,38 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
                 }}
               />
+              <motion.div 
+                className="absolute inset-0 bg-amber/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
               <div className="relative flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-amber/20">
-                  <CloudSnow className="w-4 h-4 text-amber" />
+                  <CloudSnow className="w-4 h-4 text-amber group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[11px] font-bold text-amber">Weather</span>
                     <span className="px-1.5 py-0.5 bg-amber/30 text-amber text-[8px] font-black uppercase rounded">MODERATE IMPACT</span>
+                    {/* Live Feed Indicator */}
+                    <div className="flex items-center gap-1 ml-1">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <Radio className="w-2.5 h-2.5 text-amber" />
+                      </motion.div>
+                      <span className="text-[7px] text-amber/70 uppercase font-semibold">Live</span>
+                    </div>
                   </div>
                   <p className="text-[9px] text-amber/70">Light snowfall in Midwest corridor</p>
                   <p className="text-[9px] text-amber/60 mt-0.5">Plows may slow travel on key segments</p>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded bg-amber/20">
+                <motion.div 
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-amber/20 group-hover:bg-amber/30 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                >
                   <CloudSnow className="w-3 h-3 text-amber" />
                   <span className="text-[10px] font-black text-amber">+{weatherFactor.adjustment.toFixed(1)}h</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
@@ -408,6 +534,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                 )}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
+                whileHover={{ scale: 1.3 }}
                 transition={{ delay: 0.4 + 0.08 * i }}
                 title={label}
               />
