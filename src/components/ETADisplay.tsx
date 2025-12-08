@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Clock, AlertTriangle, MapPin, ArrowRight, Lightbulb, Zap,
+  Clock, AlertTriangle, MapPin, Zap,
   Truck, Route, Calendar, CloudRain, CloudSnow, Wind, Sun, Cloud,
-  TrendingUp, TrendingDown, Radio, Loader2, Shield, Activity, Satellite
+  TrendingUp, TrendingDown, Loader2, Shield, Activity, Satellite
 } from 'lucide-react';
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
+import LivePulseIndicator from './LivePulseIndicator';
 
 interface ETADisplayProps {
   eta: ETAPrediction;
@@ -91,7 +92,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="glass-card p-2.5 border border-primary/20"
+            className="glass-card p-2 border border-primary/20"
           >
             <div className="grid grid-cols-2 gap-2">
               {/* Traffic API */}
@@ -99,19 +100,17 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                 "p-2 rounded-lg border transition-all",
                 trafficStatus === 'done' ? "bg-success/10 border-success/30" : "bg-muted/10 border-border/30"
               )}>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5 mb-1">
                   {trafficStatus === 'loading' ? (
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
                       <Loader2 className="w-3 h-3 text-primary" />
                     </motion.div>
                   ) : (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                      <Route className="w-3 h-3 text-success" />
-                    </motion.div>
+                    <Route className="w-3 h-3 text-success" />
                   )}
-                  <span className="text-[10px] font-semibold text-foreground">Traffic API</span>
+                  <span className="text-[10px] font-semibold text-foreground">Traffic</span>
                   {trafficStatus === 'done' && (
-                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[8px] text-success font-bold ml-auto">LIVE</motion.span>
+                    <LivePulseIndicator size="sm" color="success" className="ml-auto" />
                   )}
                 </div>
                 <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
@@ -127,19 +126,17 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                 "p-2 rounded-lg border transition-all",
                 weatherStatus === 'done' ? "bg-success/10 border-success/30" : "bg-muted/10 border-border/30"
               )}>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5 mb-1">
                   {weatherStatus === 'loading' ? (
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}>
                       <Loader2 className="w-3 h-3 text-primary" />
                     </motion.div>
                   ) : (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                      <Satellite className="w-3 h-3 text-success" />
-                    </motion.div>
+                    <Satellite className="w-3 h-3 text-success" />
                   )}
-                  <span className="text-[10px] font-semibold text-foreground">Weather API</span>
+                  <span className="text-[10px] font-semibold text-foreground">Weather</span>
                   {weatherStatus === 'done' && (
-                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[8px] text-success font-bold ml-auto">LIVE</motion.span>
+                    <LivePulseIndicator size="sm" color="success" className="ml-auto" />
                   )}
                 </div>
                 <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
@@ -301,28 +298,6 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
           </div>
         </div>
       </div>
-
-      {/* AI Insight - Compact */}
-      {(eta.explanation || eta.recommendations.length > 0) && (
-        <motion.div className="glass-card p-3 border-l-2 border-l-primary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-          <div className="flex gap-2">
-            <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground leading-relaxed mb-1.5">{eta.explanation}</p>
-              {eta.recommendations.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {eta.recommendations.slice(0, 2).map((rec, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-medium rounded">
-                      <ArrowRight className="w-2 h-2" />
-                      {rec.length > 30 ? rec.substring(0, 30) + '...' : rec}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 };
