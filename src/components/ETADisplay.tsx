@@ -230,103 +230,39 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             </div>
           </div>
 
-          {/* Enhanced Route Bar with segment visualization */}
+          {/* Clean Route Bar */}
           <div className="pt-3 border-t border-border/30">
-            {/* City code labels */}
-            <div className="flex justify-between text-[9px] font-bold mb-2 px-1">
-              <div className="flex flex-col items-start">
-                <span className="text-teal">LA</span>
-                <span className="text-[7px] text-muted-foreground font-normal">Origin</span>
+            {/* Route visualization */}
+            <div className="relative flex items-center gap-3">
+              {/* Origin */}
+              <div className="flex items-center gap-1.5">
+                <motion.div
+                  className="w-2.5 h-2.5 rounded-full bg-teal"
+                  animate={{ boxShadow: ['0 0 0 0 hsl(var(--teal) / 0.3)', '0 0 0 4px hsl(var(--teal) / 0)'] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <span className="text-[10px] font-semibold text-foreground">{originCity}</span>
               </div>
-              <div className="flex flex-col items-center">
-                <span className="text-amber">MID</span>
-                <span className="text-[7px] text-muted-foreground font-normal">Midwest</span>
+              
+              {/* Progress bar */}
+              <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-teal via-amber to-red-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                />
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-red-400">NYC</span>
-                <span className="text-[7px] text-muted-foreground font-normal">Destination</span>
+              
+              {/* Destination */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold text-foreground">{destinationCity}</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
               </div>
             </div>
             
-            {/* Route visualization with segments */}
-            <div className="relative h-3">
-              {/* Background track */}
-              <div className="absolute inset-0 rounded-full bg-muted/10" />
-              
-              {/* Segment container */}
-              <div className="absolute inset-0 rounded-full overflow-hidden flex">
-                {/* LA to Midwest segment - clean teal with white shimmer */}
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-teal via-teal/90 to-teal/80 relative overflow-hidden"
-                  style={{ width: '40%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                >
-                  {/* White shimmer/noise effect */}
-                  <motion.div 
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                  />
-                  {/* Scattered white dots for texture */}
-                  <div className="absolute top-1/4 left-[20%] w-0.5 h-0.5 bg-white/40 rounded-full" />
-                  <div className="absolute top-1/2 left-[45%] w-0.5 h-0.5 bg-white/30 rounded-full" />
-                  <div className="absolute top-3/4 left-[70%] w-0.5 h-0.5 bg-white/50 rounded-full" />
-                  <div className="absolute top-1/3 left-[85%] w-0.5 h-0.5 bg-white/35 rounded-full" />
-                </motion.div>
-                
-                {/* Midwest segment - amber/warning with pulse */}
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-amber/90 via-amber to-amber/90 relative"
-                  style={{ width: '30%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.4, duration: 0.4 }}
-                >
-                  <motion.div 
-                    className="absolute inset-0 bg-white/10"
-                    animate={{ opacity: [0.1, 0.3, 0.1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                </motion.div>
-                
-                {/* NYC segment - red/danger with pulse */}
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-red-500/90 via-red-500 to-red-600 relative"
-                  style={{ width: '30%' }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.6, duration: 0.4 }}
-                >
-                  <motion.div 
-                    className="absolute inset-0 bg-white/10"
-                    animate={{ opacity: [0.05, 0.2, 0.05] }}
-                    transition={{ duration: 1.2, repeat: Infinity }}
-                  />
-                </motion.div>
-              </div>
-              
-              {/* Origin marker - LA */}
-              <motion.div
-                className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-teal border-2 border-background shadow-lg"
-                animate={{ boxShadow: ['0 0 0 0 hsl(var(--teal) / 0.4)', '0 0 0 6px hsl(var(--teal) / 0)'] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-              
-              {/* Midpoint marker - subtle */}
-              <div className="absolute left-[40%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-amber border border-background" />
-              
-              {/* Destination marker - NYC */}
-              <motion.div 
-                className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 border-2 border-background shadow-lg"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </div>
-            
-            <p className="text-[9px] text-muted-foreground/80 mt-2.5 text-center italic">
-              Delays expected through Midwest corridor → NYC entry
+            <p className="text-[9px] text-muted-foreground/70 mt-2 text-center">
+              Congestion expected in Midwest → NYC corridor
             </p>
           </div>
         </div>
