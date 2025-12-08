@@ -1,6 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Clock, AlertTriangle, MapPin, ArrowRight, Lightbulb, Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Clock, AlertTriangle, MapPin, ArrowRight, Lightbulb, Zap,
+  Truck, Route, Calendar, CloudRain, TrendingUp, TrendingDown, Minus,
+  Radio, Loader2
+} from 'lucide-react';
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +21,28 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
   originCity,
   destinationCity,
 }) => {
+  const [isGatheringTraffic, setIsGatheringTraffic] = useState(true);
+  const [trafficProgress, setTrafficProgress] = useState(0);
+
+  // Simulate live traffic data gathering
+  useEffect(() => {
+    setIsGatheringTraffic(true);
+    setTrafficProgress(0);
+    
+    const interval = setInterval(() => {
+      setTrafficProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsGatheringTraffic(false), 500);
+          return 100;
+        }
+        return prev + Math.random() * 15 + 5;
+      });
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [eta]);
+
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
@@ -30,6 +56,15 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
       month: 'short',
       day: 'numeric',
     }).format(date);
+  };
+
+  const getFactorIcon = (factorName: string) => {
+    const name = factorName.toLowerCase();
+    if (name.includes('carrier') || name.includes('mode')) return Truck;
+    if (name.includes('traffic')) return Route;
+    if (name.includes('day') || name.includes('week')) return Calendar;
+    if (name.includes('weather')) return CloudRain;
+    return Minus;
   };
 
   const getImpactIcon = (impact: string) => {
@@ -47,24 +82,60 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
       transition={{ duration: 0.3 }}
       className="space-y-3"
     >
+      {/* Live Traffic Gathering Banner */}
+      <AnimatePresence>
+        {isGatheringTraffic && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="glass-card p-3 border border-primary/30 overflow-hidden"
+          >
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <Loader2 className="w-4 h-4 text-primary" />
+              </motion.div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-foreground flex items-center gap-2">
+                    <motion.span
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Radio className="w-3 h-3 text-primary" />
+                    </motion.span>
+                    Gathering Live Traffic Data...
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{Math.min(100, Math.round(trafficProgress))}%</span>
+                </div>
+                <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${Math.min(100, trafficProgress)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero ETA Card */}
       <div className="glass-card overflow-hidden relative">
         {/* Animated background gradient */}
         <motion.div 
           className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5"
-          animate={{ 
-            opacity: [0.5, 0.8, 0.5],
-          }}
+          animate={{ opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
         
         {/* Glowing orb */}
         <motion.div 
           className="absolute -top-10 -right-10 w-32 h-32 bg-primary/30 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
@@ -162,12 +233,12 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
         </div>
       </div>
 
-      {/* Impact Factors - Visual bars */}
+      {/* Impact Factors with Icons */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Impact Factors</span>
           <span className="text-[10px] text-muted-foreground">
-            Total adjustment: <span className={cn(
+            Total: <span className={cn(
               "font-bold",
               eta.factors.reduce((sum, f) => sum + f.adjustment, 0) > 0 ? "text-destructive" : "text-success"
             )}>
@@ -179,8 +250,11 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
         
         <div className="space-y-2">
           {eta.factors.map((factor, index) => {
+            const FactorIcon = getFactorIcon(factor.name);
             const ImpactIcon = getImpactIcon(factor.impact);
-            const maxAdjustment = 2; // for visual scaling
+            const isNegative = factor.impact === 'negative';
+            const isPositive = factor.impact === 'positive' || factor.impact === 'neutral';
+            const maxAdjustment = 2;
             const barWidth = Math.min(Math.abs(factor.adjustment) / maxAdjustment * 100, 100);
             
             return (
@@ -189,43 +263,62 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
-                className="group"
+                className={cn(
+                  "p-2.5 rounded-lg border transition-all",
+                  isNegative ? "bg-destructive/5 border-destructive/20" : "bg-success/5 border-success/20"
+                )}
               >
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-5 h-5 rounded flex items-center justify-center",
-                      factor.impact === 'positive' && 'bg-success/20',
-                      factor.impact === 'negative' && 'bg-destructive/20',
-                      factor.impact === 'neutral' && 'bg-muted/30'
-                    )}>
-                      <ImpactIcon className={cn(
-                        "w-3 h-3",
-                        factor.impact === 'positive' && 'text-success',
-                        factor.impact === 'negative' && 'text-destructive',
-                        factor.impact === 'neutral' && 'text-muted-foreground'
+                    <motion.div 
+                      className={cn(
+                        "w-7 h-7 rounded-lg flex items-center justify-center",
+                        isNegative ? "bg-destructive/20" : "bg-success/20"
+                      )}
+                      animate={isNegative ? { scale: [1, 1.1, 1] } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <FactorIcon className={cn(
+                        "w-4 h-4",
+                        isNegative ? "text-destructive" : "text-success"
                       )} />
+                    </motion.div>
+                    <div>
+                      <span className={cn(
+                        "text-xs font-semibold",
+                        isNegative ? "text-destructive" : "text-success"
+                      )}>{factor.name}</span>
+                      {isNegative && (
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="ml-2 text-[9px] uppercase tracking-wider text-destructive/70 font-bold"
+                        >
+                          ⚠ Delay
+                        </motion.span>
+                      )}
                     </div>
-                    <span className="text-xs font-medium text-foreground">{factor.name}</span>
                   </div>
-                  <span className={cn(
-                    'text-xs font-bold tabular-nums',
-                    factor.impact === 'positive' && 'text-success',
-                    factor.impact === 'negative' && 'text-destructive',
-                    factor.impact === 'neutral' && 'text-muted-foreground'
-                  )}>
-                    {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <ImpactIcon className={cn(
+                      "w-3 h-3",
+                      isNegative ? "text-destructive" : "text-success"
+                    )} />
+                    <span className={cn(
+                      'text-sm font-bold tabular-nums',
+                      isNegative ? "text-destructive" : "text-success"
+                    )}>
+                      {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
+                    </span>
+                  </div>
                 </div>
                 
                 {/* Visual bar */}
-                <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                <div className="h-1 bg-muted/20 rounded-full overflow-hidden mb-1.5">
                   <motion.div
                     className={cn(
                       "h-full rounded-full",
-                      factor.impact === 'positive' && 'bg-success',
-                      factor.impact === 'negative' && 'bg-destructive',
-                      factor.impact === 'neutral' && 'bg-muted-foreground'
+                      isNegative ? "bg-destructive" : "bg-success"
                     )}
                     initial={{ width: 0 }}
                     animate={{ width: `${barWidth}%` }}
@@ -233,17 +326,13 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                   />
                 </div>
                 
-                {/* Description on hover/always visible if negative */}
-                {factor.impact === 'negative' && (
-                  <motion.p 
-                    className="text-[10px] text-muted-foreground mt-1 pl-7"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 + 0.1 * index }}
-                  >
-                    {factor.description}
-                  </motion.p>
-                )}
+                {/* Description */}
+                <p className={cn(
+                  "text-[10px] leading-relaxed",
+                  isNegative ? "text-destructive/70" : "text-success/70"
+                )}>
+                  {factor.description}
+                </p>
               </motion.div>
             );
           })}
