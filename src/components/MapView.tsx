@@ -50,11 +50,14 @@ const MapView: React.FC<MapViewProps> = ({
     } else if (type === 'destination') {
       el.innerHTML = `
         <div class="relative">
-          <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/30">
-            <svg class="w-3 h-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+          <div class="w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/50" style="animation: destination-pulse 2s ease-in-out infinite;">
+            <svg class="w-3.5 h-3.5 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
             </svg>
           </div>
+          <div class="absolute inset-0 -m-1 rounded-full border-2 border-primary/60" style="animation: destination-ring 2s ease-in-out infinite;"></div>
+          <div class="absolute inset-0 -m-2 rounded-full border border-primary/40" style="animation: destination-ring 2s ease-in-out infinite 0.3s;"></div>
+          <div class="absolute inset-0 -m-3 rounded-full border border-primary/20" style="animation: destination-ring 2s ease-in-out infinite 0.6s;"></div>
         </div>
       `;
     } else {

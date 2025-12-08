@@ -17,6 +17,7 @@ import CheckoutForm, { CheckoutData } from '@/components/CheckoutForm';
 import DashboardStats from '@/components/DashboardStats';
 import TrackingView from '@/components/TrackingView';
 import SuccessAnimation from '@/components/SuccessAnimation';
+import AIAdvisor from '@/components/AIAdvisor';
 import { CarrierMode, Shipment, DashboardStats as DashboardStatsType } from '@/types/shipment';
 import { calculateETA, calculateDistance, estimateBaseDuration } from '@/lib/eta-calculator';
 import { api, mockStats, mockShipments } from '@/lib/mock-data';
@@ -301,13 +302,13 @@ const Index = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="glass-card p-6"
+                          className="glass-card p-4"
                         >
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setQuoteStep('locations')}
-                            className="mb-4 -ml-2"
+                            className="mb-3 -ml-2"
                           >
                             <ArrowLeft className="w-4 h-4" /> Edit Route
                           </Button>
@@ -317,7 +318,7 @@ const Index = () => {
                             originCity={origin?.city || ''}
                             destinationCity={destination?.city || ''}
                           />
-                          <Button variant="hero" className="w-full mt-6" onClick={() => setQuoteStep('checkout')}>
+                          <Button variant="hero" className="w-full mt-4" onClick={() => setQuoteStep('checkout')}>
                             Proceed to Checkout
                           </Button>
                         </motion.div>
@@ -329,13 +330,13 @@ const Index = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="glass-card p-6"
+                          className="glass-card p-4"
                         >
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setQuoteStep('eta')}
-                            className="mb-4 -ml-2"
+                            className="mb-3 -ml-2"
                           >
                             <ArrowLeft className="w-4 h-4" /> Back to ETA
                           </Button>
@@ -345,13 +346,21 @@ const Index = () => {
                     </AnimatePresence>
                   </div>
 
-                  {/* Right: Map */}
-                  <div className="h-[400px] lg:h-[600px] lg:sticky lg:top-24">
+                  {/* Right: Map with AI Advisor */}
+                  <div className="h-[350px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24 relative">
                     <MapView
                       origin={origin ? { lat: origin.lat, lng: origin.lng, label: origin.city } : undefined}
                       destination={destination ? { lat: destination.lat, lng: destination.lng, label: destination.city } : undefined}
                       showRoute={!!origin && !!destination && !!selectedCarrier}
                     />
+                    {/* AI Advisor Popup */}
+                    {quoteStep === 'eta' && eta && (
+                      <AIAdvisor 
+                        eta={eta} 
+                        carrierMode={selectedCarrier}
+                        onCarrierChange={(carrier) => setSelectedCarrier(carrier)}
+                      />
+                    )}
                   </div>
                 </div>
               </motion.div>
