@@ -227,48 +227,90 @@ const Index = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left: Form */}
                   <div className="space-y-6">
-                    <div className="glass-card p-6">
-                      <h2 className="text-xl font-bold text-foreground mb-6">Get a Quote</h2>
-                      
+                    <AnimatePresence mode="wait">
                       {(quoteStep === 'locations' || quoteStep === 'carrier') && (
-                        <div className="space-y-4 mb-6">
-                          <AddressInput
-                            label="Origin"
-                            placeholder="Enter pickup city (e.g., Los Angeles)"
-                            value={origin}
-                            onChange={setOrigin}
-                            icon="origin"
-                          />
-                          <AddressInput
-                            label="Destination"
-                            placeholder="Enter delivery city (e.g., New York)"
-                            value={destination}
-                            onChange={setDestination}
-                            icon="destination"
-                          />
-                        </div>
-                      )}
+                        <motion.div
+                          key="quote-entry"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="glass-card p-6"
+                        >
+                          <h2 className="text-xl font-bold text-foreground mb-6">Get a Quote</h2>
+                          
+                          <div className="space-y-4 mb-6">
+                            <AddressInput
+                              label="Origin"
+                              placeholder="Enter pickup city (e.g., Los Angeles)"
+                              value={origin}
+                              onChange={setOrigin}
+                              icon="origin"
+                            />
+                            <AddressInput
+                              label="Destination"
+                              placeholder="Enter delivery city (e.g., New York)"
+                              value={destination}
+                              onChange={setDestination}
+                              icon="destination"
+                            />
+                          </div>
 
-                      {origin && destination && quoteStep === 'locations' && (
-                        <Button variant="hero" className="w-full" onClick={() => setQuoteStep('carrier')}>
-                          Continue to Carrier Selection
-                        </Button>
-                      )}
-
-                      {quoteStep === 'carrier' && (
-                        <>
-                          <CarrierSelector
-                            selectedCarrier={selectedCarrier}
-                            onSelect={(carrier) => {
-                              setSelectedCarrier(carrier);
-                              setQuoteStep('eta');
-                            }}
-                          />
-                        </>
+                          <AnimatePresence>
+                            {origin && destination && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="pt-4 border-t border-border/30">
+                                  <CarrierSelector
+                                    selectedCarrier={selectedCarrier}
+                                    onSelect={(carrier) => {
+                                      setSelectedCarrier(carrier);
+                                    }}
+                                    compact
+                                  />
+                                  
+                                  {selectedCarrier && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      className="mt-6"
+                                    >
+                                      <Button 
+                                        variant="hero" 
+                                        className="w-full" 
+                                        onClick={() => setQuoteStep('eta')}
+                                      >
+                                        Calculate ETA
+                                      </Button>
+                                    </motion.div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
                       )}
 
                       {quoteStep === 'eta' && eta && (
-                        <>
+                        <motion.div
+                          key="quote-eta"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="glass-card p-6"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setQuoteStep('locations')}
+                            className="mb-4 -ml-2"
+                          >
+                            <ArrowLeft className="w-4 h-4" /> Edit Route
+                          </Button>
                           <ETADisplay
                             eta={eta}
                             distanceMiles={distanceMiles}
@@ -278,13 +320,29 @@ const Index = () => {
                           <Button variant="hero" className="w-full mt-6" onClick={() => setQuoteStep('checkout')}>
                             Proceed to Checkout
                           </Button>
-                        </>
+                        </motion.div>
                       )}
 
                       {quoteStep === 'checkout' && (
-                        <CheckoutForm onSubmit={handleCheckout} isLoading={isCreating} />
+                        <motion.div
+                          key="quote-checkout"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="glass-card p-6"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setQuoteStep('eta')}
+                            className="mb-4 -ml-2"
+                          >
+                            <ArrowLeft className="w-4 h-4" /> Back to ETA
+                          </Button>
+                          <CheckoutForm onSubmit={handleCheckout} isLoading={isCreating} />
+                        </motion.div>
                       )}
-                    </div>
+                    </AnimatePresence>
                   </div>
 
                   {/* Right: Map */}
