@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, AlertTriangle, MapPin, ChevronRight, Lightbulb, Zap } from 'lucide-react';
+import { Clock, AlertTriangle, MapPin, ArrowRight, Lightbulb, Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
 
@@ -17,14 +17,6 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
   originCity,
   destinationCity,
 }) => {
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  };
-
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
@@ -32,143 +24,273 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
     }).format(date);
   };
 
+  const formatDay = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
+
+  const getImpactIcon = (impact: string) => {
+    switch (impact) {
+      case 'positive': return TrendingUp;
+      case 'negative': return TrendingDown;
+      default: return Minus;
+    }
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-3"
     >
-      {/* Hero ETA Section */}
-      <div className="glass-card p-5 glow-effect relative overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
+      {/* Hero ETA Card */}
+      <div className="glass-card overflow-hidden relative">
+        {/* Animated background gradient */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5"
+          animate={{ 
+            opacity: [0.5, 0.8, 0.5],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
         
-        <div className="relative">
-          {/* Top row: Risk badge */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Estimated Arrival</span>
-            <span className={cn(
-              'status-badge text-xs',
-              eta.riskLevel === 'low' && 'status-low',
-              eta.riskLevel === 'medium' && 'status-medium',
-              eta.riskLevel === 'high' && 'status-high'
-            )}>
-              <AlertTriangle className="w-3 h-3" />
-              {eta.riskLevel.charAt(0).toUpperCase() + eta.riskLevel.slice(1)}
-            </span>
-          </div>
+        {/* Glowing orb */}
+        <motion.div 
+          className="absolute -top-10 -right-10 w-32 h-32 bg-primary/30 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-          {/* Main ETA display */}
-          <div className="flex items-baseline gap-3 mb-3">
-            <motion.div 
-              className="text-3xl md:text-4xl font-bold text-primary"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+        <div className="relative p-5">
+          {/* Header with risk */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Arrival Prediction</span>
+            <motion.span 
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5',
+                eta.riskLevel === 'low' && 'bg-success/20 text-success',
+                eta.riskLevel === 'medium' && 'bg-warning/20 text-warning',
+                eta.riskLevel === 'high' && 'bg-destructive/20 text-destructive'
+              )}
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
             >
-              {formatTime(eta.estimatedArrival)}
-            </motion.div>
-            <span className="text-sm text-muted-foreground">{formatDate(eta.estimatedArrival)}</span>
+              <AlertTriangle className="w-3 h-3" />
+              {eta.riskLevel} risk
+            </motion.span>
           </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3 py-3 border-y border-border/30">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <Clock className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-sm font-semibold text-foreground">{eta.durationHours.toFixed(1)}h</div>
-            </div>
-            <div className="text-center border-x border-border/30">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <MapPin className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-sm font-semibold text-foreground">{distanceMiles.toLocaleString()} mi</div>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <Zap className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-sm font-semibold text-foreground">
-                {formatTime(eta.confidenceWindow.earliest)} - {formatTime(eta.confidenceWindow.latest)}
-              </div>
-            </div>
-          </div>
-
-          {/* Route */}
-          <div className="flex items-center gap-2 mt-3">
-            <div className="w-2 h-2 rounded-full bg-success" />
-            <span className="text-xs font-medium text-foreground truncate">{originCity}</span>
-            <div className="flex-1 flex items-center">
-              <div className="h-px flex-1 bg-gradient-to-r from-success to-primary" />
-              <ChevronRight className="w-3 h-3 text-primary mx-1" />
-              <div className="h-px flex-1 bg-gradient-to-r from-primary to-destructive" />
-            </div>
-            <span className="text-xs font-medium text-foreground truncate">{destinationCity}</span>
-            <div className="w-2 h-2 rounded-full bg-destructive" />
-          </div>
-        </div>
-      </div>
-
-      {/* Compact Factors Grid */}
-      <div className="grid grid-cols-2 gap-2">
-        {eta.factors.slice(0, 4).map((factor, index) => (
-          <motion.div
-            key={factor.name}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 * index }}
-            className={cn(
-              "glass-card p-3 border-l-2",
-              factor.impact === 'positive' && 'border-l-success',
-              factor.impact === 'negative' && 'border-l-destructive',
-              factor.impact === 'neutral' && 'border-l-muted-foreground'
-            )}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-foreground truncate">{factor.name}</span>
-              <span className={cn(
-                'text-xs font-bold',
-                factor.impact === 'positive' && 'text-success',
-                factor.impact === 'negative' && 'text-destructive',
-                factor.impact === 'neutral' && 'text-muted-foreground'
-              )}>
-                {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
+          {/* Main ETA Time with pulse */}
+          <div className="flex items-end gap-3 mb-4">
+            <motion.div 
+              className="relative"
+              animate={{ 
+                textShadow: [
+                  '0 0 20px hsl(var(--primary) / 0)',
+                  '0 0 30px hsl(var(--primary) / 0.5)',
+                  '0 0 20px hsl(var(--primary) / 0)',
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <span className="text-5xl md:text-6xl font-black text-primary tracking-tight">
+                {formatTime(eta.estimatedArrival)}
               </span>
-            </div>
-            <p className="text-[10px] text-muted-foreground line-clamp-2">{factor.description}</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Analysis & Recommendations Combined */}
-      <div className="glass-card p-4 border-l-4 border-l-primary">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-            <Lightbulb className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-semibold text-foreground mb-1">AI Analysis</h4>
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-              {eta.explanation}
-            </p>
-            {eta.recommendations.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {eta.recommendations.slice(0, 2).map((rec, index) => (
-                  <span 
-                    key={index}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded-full"
-                  >
-                    <ChevronRight className="w-2.5 h-2.5" />
-                    {rec.length > 30 ? rec.substring(0, 30) + '...' : rec}
-                  </span>
-                ))}
+            </motion.div>
+            <div className="pb-2">
+              <div className="text-sm font-medium text-foreground">{formatDay(eta.estimatedArrival)}</div>
+              <div className="text-xs text-muted-foreground">
+                Window: {formatTime(eta.confidenceWindow.earliest)} – {formatTime(eta.confidenceWindow.latest)}
               </div>
-            )}
+            </div>
+          </div>
+
+          {/* Stats pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">{eta.durationHours.toFixed(1)} hrs</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">{distanceMiles.toLocaleString()} mi</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">±{((eta.confidenceWindow.latest.getTime() - eta.confidenceWindow.earliest.getTime()) / 60000 / 2).toFixed(0)} min</span>
+            </div>
+          </div>
+
+          {/* Route visualization */}
+          <div className="mt-4 pt-4 border-t border-border/30">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <motion.div 
+                  className="w-3 h-3 rounded-full bg-success"
+                  animate={{ boxShadow: ['0 0 0 0 hsl(var(--success) / 0.4)', '0 0 0 6px hsl(var(--success) / 0)', '0 0 0 0 hsl(var(--success) / 0)'] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <span className="text-xs font-medium text-foreground">{originCity}</span>
+              </div>
+              <div className="flex-1 relative h-1 bg-muted/30 rounded-full overflow-hidden">
+                <motion.div 
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-success via-primary to-primary rounded-full"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full shadow-lg"
+                  initial={{ left: '0%' }}
+                  animate={{ left: '100%' }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-foreground">{destinationCity}</span>
+                <div className="w-3 h-3 rounded-full bg-destructive" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Impact Factors - Visual bars */}
+      <div className="glass-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Impact Factors</span>
+          <span className="text-[10px] text-muted-foreground">
+            Total adjustment: <span className={cn(
+              "font-bold",
+              eta.factors.reduce((sum, f) => sum + f.adjustment, 0) > 0 ? "text-destructive" : "text-success"
+            )}>
+              {eta.factors.reduce((sum, f) => sum + f.adjustment, 0) > 0 ? '+' : ''}
+              {eta.factors.reduce((sum, f) => sum + f.adjustment, 0).toFixed(1)}h
+            </span>
+          </span>
+        </div>
+        
+        <div className="space-y-2">
+          {eta.factors.map((factor, index) => {
+            const ImpactIcon = getImpactIcon(factor.impact);
+            const maxAdjustment = 2; // for visual scaling
+            const barWidth = Math.min(Math.abs(factor.adjustment) / maxAdjustment * 100, 100);
+            
+            return (
+              <motion.div
+                key={factor.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * index }}
+                className="group"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <div className={cn(
+                      "w-5 h-5 rounded flex items-center justify-center",
+                      factor.impact === 'positive' && 'bg-success/20',
+                      factor.impact === 'negative' && 'bg-destructive/20',
+                      factor.impact === 'neutral' && 'bg-muted/30'
+                    )}>
+                      <ImpactIcon className={cn(
+                        "w-3 h-3",
+                        factor.impact === 'positive' && 'text-success',
+                        factor.impact === 'negative' && 'text-destructive',
+                        factor.impact === 'neutral' && 'text-muted-foreground'
+                      )} />
+                    </div>
+                    <span className="text-xs font-medium text-foreground">{factor.name}</span>
+                  </div>
+                  <span className={cn(
+                    'text-xs font-bold tabular-nums',
+                    factor.impact === 'positive' && 'text-success',
+                    factor.impact === 'negative' && 'text-destructive',
+                    factor.impact === 'neutral' && 'text-muted-foreground'
+                  )}>
+                    {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
+                  </span>
+                </div>
+                
+                {/* Visual bar */}
+                <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className={cn(
+                      "h-full rounded-full",
+                      factor.impact === 'positive' && 'bg-success',
+                      factor.impact === 'negative' && 'bg-destructive',
+                      factor.impact === 'neutral' && 'bg-muted-foreground'
+                    )}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${barWidth}%` }}
+                    transition={{ delay: 0.2 + 0.1 * index, duration: 0.5 }}
+                  />
+                </div>
+                
+                {/* Description on hover/always visible if negative */}
+                {factor.impact === 'negative' && (
+                  <motion.p 
+                    className="text-[10px] text-muted-foreground mt-1 pl-7"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 + 0.1 * index }}
+                  >
+                    {factor.description}
+                  </motion.p>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* AI Insight */}
+      {(eta.explanation || eta.recommendations.length > 0) && (
+        <motion.div 
+          className="glass-card p-4 border-l-4 border-l-primary relative overflow-hidden"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <motion.div 
+            className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full blur-2xl"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          
+          <div className="relative flex gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-foreground mb-1">Route Intelligence</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">
+                {eta.explanation}
+              </p>
+              {eta.recommendations.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {eta.recommendations.slice(0, 2).map((rec, idx) => (
+                    <motion.span 
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-[10px] font-medium rounded-md"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <ArrowRight className="w-2.5 h-2.5" />
+                      {rec.length > 35 ? rec.substring(0, 35) + '...' : rec}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
