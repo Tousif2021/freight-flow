@@ -30,18 +30,19 @@ const StatCard: React.FC<{
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.4 }}
-    className="glass-card p-5 hover-lift"
+    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+    className="glass-card p-5 group cursor-pointer"
   >
-    <div className="flex items-start justify-between mb-3">
-      <div className="p-2 rounded-lg bg-primary/10">
+    <div className="flex items-start justify-between mb-4">
+      <div className="p-2.5 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
         {icon}
       </div>
       {trend && (
         <div className={cn(
-          'flex items-center gap-1 text-xs font-medium',
-          trend === 'up' && 'text-success',
-          trend === 'down' && 'text-destructive',
-          trend === 'neutral' && 'text-muted-foreground'
+          'flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full',
+          trend === 'up' && 'text-success bg-success/10',
+          trend === 'down' && 'text-destructive bg-destructive/10',
+          trend === 'neutral' && 'text-muted-foreground bg-muted/30'
         )}>
           <TrendingUp className={cn(
             'w-3 h-3',
@@ -52,7 +53,7 @@ const StatCard: React.FC<{
       )}
     </div>
     <motion.div 
-      className="text-2xl font-bold text-foreground mb-1"
+      className="text-3xl font-bold text-foreground mb-1"
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
@@ -198,25 +199,28 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.7 + index * 0.1 }}
+              whileHover={{ x: 4, transition: { duration: 0.15 } }}
               onClick={() => onViewShipment(shipment)}
-              className="w-full p-4 rounded-lg bg-muted/20 hover:bg-muted/40 transition-all duration-200 text-left group"
+              className="w-full p-4 rounded-xl bg-muted/20 hover:bg-muted/40 border border-transparent hover:border-primary/20 transition-all duration-200 text-left group"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(shipment.status)}
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-background/50 group-hover:bg-primary/10 transition-colors">
+                    {getStatusIcon(shipment.status)}
+                  </div>
                   <div>
-                    <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                    <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                       {shipment.trackingNumber}
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3" />
                       {shipment.origin.city} → {shipment.destination.city}
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end gap-1.5">
                   <div className={cn(
-                    'text-xs font-medium px-2 py-1 rounded-full text-center',
+                    'text-xs font-medium px-2.5 py-1 rounded-full text-center min-w-[80px]',
                     shipment.status === 'delivered' && 'bg-success/20 text-success',
                     shipment.status === 'in_transit' && 'bg-primary/20 text-primary',
                     shipment.status === 'delayed' && 'bg-destructive/20 text-destructive',
@@ -224,7 +228,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
                   )}>
                     {getStatusLabel(shipment.status)}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground">
                     ETA: {formatDate(shipment.eta.estimatedArrival)}
                   </div>
                 </div>
