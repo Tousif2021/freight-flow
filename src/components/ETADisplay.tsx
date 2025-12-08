@@ -4,6 +4,8 @@ import { Clock, AlertTriangle, MapPin, Truck, Route, Calendar, CloudSnow, Loader
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
 import LivePulseIndicator from './LivePulseIndicator';
+import RouteTrafficBar from './RouteTrafficBar';
+
 interface ETADisplayProps {
   eta: ETAPrediction;
   distanceMiles: number;
@@ -229,7 +231,13 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
           </div>
 
           {/* Segmented Route Traffic Bar */}
-          
+          <RouteTrafficBar 
+            originCity={originCity}
+            destinationCity={destinationCity}
+            truckPosition={35}
+            nextCheckpoint="Midwest Hub"
+            etaToCheckpoint="4.2h"
+          />
         </div>
       </div>
 
