@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, AlertTriangle, MapPin, ArrowRight, Lightbulb, Zap,
-  Truck, Route, Calendar, CloudRain, CloudSnow, Wind, Sun,
-  TrendingUp, TrendingDown, Minus, Radio, Loader2, Shield, Activity
+  Truck, Route, Calendar, CloudRain, CloudSnow, Wind, Sun, Cloud,
+  TrendingUp, TrendingDown, Radio, Loader2, Shield, Activity, Satellite
 } from 'lucide-react';
 import { ETAPrediction } from '@/types/shipment';
 import { cn } from '@/lib/utils';
@@ -21,34 +21,49 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
   originCity,
   destinationCity,
 }) => {
-  const [isGatheringTraffic, setIsGatheringTraffic] = useState(true);
+  const [trafficStatus, setTrafficStatus] = useState<'loading' | 'done'>('loading');
+  const [weatherStatus, setWeatherStatus] = useState<'loading' | 'done'>('loading');
   const [trafficProgress, setTrafficProgress] = useState(0);
+  const [weatherProgress, setWeatherProgress] = useState(0);
 
   useEffect(() => {
-    setIsGatheringTraffic(true);
+    setTrafficStatus('loading');
+    setWeatherStatus('loading');
     setTrafficProgress(0);
+    setWeatherProgress(0);
     
-    const interval = setInterval(() => {
+    // Traffic API simulation
+    const trafficInterval = setInterval(() => {
       setTrafficProgress(prev => {
         if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => setIsGatheringTraffic(false), 500);
+          clearInterval(trafficInterval);
+          setTimeout(() => setTrafficStatus('done'), 300);
           return 100;
         }
-        return prev + Math.random() * 15 + 5;
+        return prev + Math.random() * 20 + 10;
       });
-    }, 200);
+    }, 150);
 
-    return () => clearInterval(interval);
+    // Weather API simulation (slightly delayed)
+    const weatherInterval = setInterval(() => {
+      setWeatherProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(weatherInterval);
+          setTimeout(() => setWeatherStatus('done'), 300);
+          return 100;
+        }
+        return prev + Math.random() * 18 + 8;
+      });
+    }, 180);
+
+    return () => {
+      clearInterval(trafficInterval);
+      clearInterval(weatherInterval);
+    };
   }, [eta]);
 
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
-  };
-
-  const formatDay = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
-  };
+  const formatTime = (date: Date) => new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+  const formatDay = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
 
   const getFactorIcon = (factorName: string) => {
     const name = factorName.toLowerCase();
@@ -59,45 +74,79 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
       if (name.includes('snow')) return CloudSnow;
       if (name.includes('wind')) return Wind;
       if (name.includes('clear') || name.includes('sun')) return Sun;
-      return CloudRain;
+      return Cloud;
     }
     return Activity;
   };
 
   const totalAdjustment = eta.factors.reduce((sum, f) => sum + f.adjustment, 0);
+  const isDataLoading = trafficStatus === 'loading' || weatherStatus === 'loading';
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-3"
-    >
-      {/* Live Traffic Gathering Banner */}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-2">
+      {/* Live Data Fetching Status */}
       <AnimatePresence>
-        {isGatheringTraffic && (
+        {isDataLoading && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="glass-card p-3 border border-primary/30 overflow-hidden"
+            className="glass-card p-2.5 border border-primary/20"
           >
-            <div className="flex items-center gap-3">
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                <Loader2 className="w-4 h-4 text-primary" />
-              </motion.div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-foreground flex items-center gap-2">
-                    <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                      <Radio className="w-3 h-3 text-primary" />
-                    </motion.span>
-                    Gathering Live Traffic Data...
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{Math.min(100, Math.round(trafficProgress))}%</span>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Traffic API */}
+              <div className={cn(
+                "p-2 rounded-lg border transition-all",
+                trafficStatus === 'done' ? "bg-success/10 border-success/30" : "bg-muted/10 border-border/30"
+              )}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  {trafficStatus === 'loading' ? (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                      <Loader2 className="w-3 h-3 text-primary" />
+                    </motion.div>
+                  ) : (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      <Route className="w-3 h-3 text-success" />
+                    </motion.div>
+                  )}
+                  <span className="text-[10px] font-semibold text-foreground">Traffic API</span>
+                  {trafficStatus === 'done' && (
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[8px] text-success font-bold ml-auto">LIVE</motion.span>
+                  )}
                 </div>
                 <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
-                  <motion.div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, trafficProgress)}%` }} />
+                  <motion.div 
+                    className={cn("h-full rounded-full", trafficStatus === 'done' ? "bg-success" : "bg-primary")}
+                    style={{ width: `${Math.min(100, trafficProgress)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Weather API */}
+              <div className={cn(
+                "p-2 rounded-lg border transition-all",
+                weatherStatus === 'done' ? "bg-success/10 border-success/30" : "bg-muted/10 border-border/30"
+              )}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  {weatherStatus === 'loading' ? (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}>
+                      <Loader2 className="w-3 h-3 text-primary" />
+                    </motion.div>
+                  ) : (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      <Satellite className="w-3 h-3 text-success" />
+                    </motion.div>
+                  )}
+                  <span className="text-[10px] font-semibold text-foreground">Weather API</span>
+                  {weatherStatus === 'done' && (
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[8px] text-success font-bold ml-auto">LIVE</motion.span>
+                  )}
+                </div>
+                <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
+                  <motion.div 
+                    className={cn("h-full rounded-full", weatherStatus === 'done' ? "bg-success" : "bg-primary")}
+                    style={{ width: `${Math.min(100, weatherProgress)}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -105,265 +154,133 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Hero ETA Card */}
+      {/* Hero ETA Card - More Compact */}
       <div className="glass-card overflow-hidden relative">
-        <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5"
-          animate={{ opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute -top-10 -right-10 w-32 h-32 bg-primary/30 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <motion.div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3, repeat: Infinity }} />
+        <motion.div className="absolute -top-8 -right-8 w-24 h-24 bg-primary/30 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 4, repeat: Infinity }} />
 
-        <div className="relative p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Arrival Prediction</span>
-            <motion.span 
-              className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5',
-                eta.riskLevel === 'low' && 'bg-success/20 text-success',
-                eta.riskLevel === 'medium' && 'bg-warning/20 text-warning',
-                eta.riskLevel === 'high' && 'bg-destructive/20 text-destructive'
-              )}
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <AlertTriangle className="w-3 h-3" />
-              {eta.riskLevel} risk
+        <div className="relative p-4">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold">Arrival Prediction</span>
+            <motion.span className={cn(
+              'px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide flex items-center gap-1',
+              eta.riskLevel === 'low' && 'bg-success/20 text-success',
+              eta.riskLevel === 'medium' && 'bg-warning/20 text-warning',
+              eta.riskLevel === 'high' && 'bg-destructive/20 text-destructive'
+            )} animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+              <AlertTriangle className="w-2.5 h-2.5" />
+              {eta.riskLevel}
             </motion.span>
           </div>
 
-          <div className="flex items-end gap-3 mb-4">
-            <motion.div 
-              animate={{ textShadow: ['0 0 20px hsl(var(--primary) / 0)', '0 0 30px hsl(var(--primary) / 0.5)', '0 0 20px hsl(var(--primary) / 0)'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <span className="text-5xl md:text-6xl font-black text-primary tracking-tight">
-                {formatTime(eta.estimatedArrival)}
-              </span>
-            </motion.div>
-            <div className="pb-2">
-              <div className="text-sm font-medium text-foreground">{formatDay(eta.estimatedArrival)}</div>
-              <div className="text-xs text-muted-foreground">
-                Window: {formatTime(eta.confidenceWindow.earliest)} – {formatTime(eta.confidenceWindow.latest)}
-              </div>
+          <div className="flex items-end gap-2 mb-3">
+            <motion.span className="text-4xl font-black text-primary tracking-tight" animate={{ textShadow: ['0 0 15px hsl(var(--primary) / 0)', '0 0 25px hsl(var(--primary) / 0.4)', '0 0 15px hsl(var(--primary) / 0)'] }} transition={{ duration: 2, repeat: Infinity }}>
+              {formatTime(eta.estimatedArrival)}
+            </motion.span>
+            <div className="pb-1">
+              <div className="text-xs font-medium text-foreground">{formatDay(eta.estimatedArrival)}</div>
+              <div className="text-[10px] text-muted-foreground">{formatTime(eta.confidenceWindow.earliest)} – {formatTime(eta.confidenceWindow.latest)}</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-foreground">{eta.durationHours.toFixed(1)} hrs</span>
+          <div className="flex items-center gap-1.5 flex-wrap mb-3">
+            <div className="flex items-center gap-1 px-2 py-1 bg-muted/30 rounded-full">
+              <Clock className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-semibold text-foreground">{eta.durationHours.toFixed(1)}h</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
-              <MapPin className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-foreground">{distanceMiles.toLocaleString()} mi</span>
+            <div className="flex items-center gap-1 px-2 py-1 bg-muted/30 rounded-full">
+              <MapPin className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-semibold text-foreground">{distanceMiles.toLocaleString()}mi</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-foreground">±{((eta.confidenceWindow.latest.getTime() - eta.confidenceWindow.earliest.getTime()) / 60000 / 2).toFixed(0)} min</span>
+            <div className="flex items-center gap-1 px-2 py-1 bg-muted/30 rounded-full">
+              <Zap className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-semibold text-foreground">±{((eta.confidenceWindow.latest.getTime() - eta.confidenceWindow.earliest.getTime()) / 60000 / 2).toFixed(0)}m</span>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-border/30">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <motion.div 
-                  className="w-3 h-3 rounded-full bg-success"
-                  animate={{ boxShadow: ['0 0 0 0 hsl(var(--success) / 0.4)', '0 0 0 6px hsl(var(--success) / 0)', '0 0 0 0 hsl(var(--success) / 0)'] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <span className="text-xs font-medium text-foreground">{originCity}</span>
-              </div>
-              <div className="flex-1 relative h-1 bg-muted/30 rounded-full overflow-hidden">
-                <motion.div 
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-success via-primary to-primary rounded-full"
-                  initial={{ width: '0%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1, delay: 0.2 }}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-foreground">{destinationCity}</span>
-                <div className="w-3 h-3 rounded-full bg-destructive" />
-              </div>
-            </div>
+          <div className="flex items-center gap-2 pt-3 border-t border-border/30">
+            <motion.div className="w-2 h-2 rounded-full bg-success" animate={{ boxShadow: ['0 0 0 0 hsl(var(--success) / 0.4)', '0 0 0 4px hsl(var(--success) / 0)'] }} transition={{ duration: 1.5, repeat: Infinity }} />
+            <span className="text-[10px] font-medium text-foreground truncate">{originCity}</span>
+            <div className="flex-1 h-0.5 bg-gradient-to-r from-success via-primary to-primary rounded-full" />
+            <span className="text-[10px] font-medium text-foreground truncate">{destinationCity}</span>
+            <div className="w-2 h-2 rounded-full bg-destructive" />
           </div>
         </div>
       </div>
 
-      {/* RICH Impact Factors Section */}
+      {/* Compact Impact Factors */}
       <div className="glass-card overflow-hidden">
-        {/* Header with gradient */}
-        <div className="p-4 border-b border-border/30 bg-gradient-to-r from-muted/20 to-transparent">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-foreground">Impact Analysis</h3>
-                <p className="text-[10px] text-muted-foreground">Real-time route factors</p>
-              </div>
-            </div>
-            <div className={cn(
-              "px-3 py-1.5 rounded-lg flex items-center gap-2",
-              totalAdjustment > 0.5 ? "bg-destructive/10" : totalAdjustment < -0.1 ? "bg-success/10" : "bg-muted/20"
-            )}>
-              <span className="text-[10px] text-muted-foreground">Net Impact</span>
-              <span className={cn(
-                "text-sm font-black tabular-nums",
-                totalAdjustment > 0.5 ? "text-destructive" : totalAdjustment < -0.1 ? "text-success" : "text-foreground"
-              )}>
-                {totalAdjustment > 0 ? '+' : ''}{totalAdjustment.toFixed(1)}h
-              </span>
-            </div>
+        <div className="px-3 py-2 border-b border-border/30 bg-gradient-to-r from-muted/20 to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-bold text-foreground">Impact Analysis</span>
+          </div>
+          <div className={cn(
+            "px-2 py-0.5 rounded flex items-center gap-1",
+            totalAdjustment > 0.3 ? "bg-red-500/20" : "bg-success/20"
+          )}>
+            <span className={cn("text-xs font-black tabular-nums", totalAdjustment > 0.3 ? "text-red-400" : "text-success")}>
+              {totalAdjustment > 0 ? '+' : ''}{totalAdjustment.toFixed(1)}h
+            </span>
           </div>
         </div>
 
-        {/* Factor Cards */}
-        <div className="p-3 space-y-2">
+        <div className="p-2 space-y-1.5">
           {eta.factors.map((factor, index) => {
             const FactorIcon = getFactorIcon(factor.name);
             const isNegative = factor.impact === 'negative';
-            const isPositive = factor.impact === 'positive';
             const severity = Math.abs(factor.adjustment);
             const severityPercent = Math.min((severity / 1.5) * 100, 100);
             
             return (
               <motion.div
                 key={factor.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 * index, type: "spring", stiffness: 100 }}
-                className="relative group"
-              >
-                <div className={cn(
-                  "relative rounded-xl p-3 transition-all duration-300 overflow-hidden",
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index }}
+                className={cn(
+                  "relative rounded-lg p-2 border",
                   isNegative 
-                    ? "bg-gradient-to-r from-destructive/10 via-destructive/5 to-transparent border border-destructive/20 hover:border-destructive/40" 
-                    : "bg-gradient-to-r from-success/10 via-success/5 to-transparent border border-success/20 hover:border-success/40"
-                )}>
-                  {/* Animated background pulse for negative factors */}
-                  {isNegative && (
-                    <motion.div
-                      className="absolute inset-0 bg-destructive/5 rounded-xl"
-                      animate={{ opacity: [0, 0.5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  )}
-                  
-                  <div className="relative flex items-start gap-3">
-                    {/* Icon with ring */}
-                    <div className="relative flex-shrink-0">
-                      <motion.div 
-                        className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center",
-                          isNegative ? "bg-destructive/20" : "bg-success/20"
-                        )}
-                        animate={isNegative ? { 
-                          boxShadow: ['0 0 0 0 hsl(var(--destructive) / 0.3)', '0 0 0 8px hsl(var(--destructive) / 0)', '0 0 0 0 hsl(var(--destructive) / 0)']
-                        } : {}}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <FactorIcon className={cn(
-                          "w-5 h-5",
-                          isNegative ? "text-destructive" : "text-success"
-                        )} />
-                      </motion.div>
-                      
-                      {/* Status indicator dot */}
-                      <motion.div 
-                        className={cn(
-                          "absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
-                          isNegative ? "bg-destructive" : "bg-success"
-                        )}
-                        animate={isNegative ? { scale: [1, 1.2, 1] } : {}}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      />
-                    </div>
+                    ? "bg-red-500/10 border-red-500/30" 
+                    : "bg-success/10 border-success/30"
+                )}
+              >
+                {isNegative && (
+                  <motion.div className="absolute inset-0 bg-red-500/5 rounded-lg" animate={{ opacity: [0, 0.5, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+                )}
+                
+                <div className="relative flex items-center gap-2">
+                  <motion.div 
+                    className={cn("w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0", isNegative ? "bg-red-500/20" : "bg-success/20")}
+                    animate={isNegative ? { boxShadow: ['0 0 0 0 rgba(239,68,68,0.3)', '0 0 0 6px rgba(239,68,68,0)', '0 0 0 0 rgba(239,68,68,0)'] } : {}}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <FactorIcon className={cn("w-3.5 h-3.5", isNegative ? "text-red-400" : "text-success")} />
+                  </motion.div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className={cn(
-                              "text-sm font-bold",
-                              isNegative ? "text-destructive" : "text-success"
-                            )}>
-                              {factor.name}
-                            </span>
-                            {isNegative && (
-                              <motion.span
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="px-1.5 py-0.5 bg-destructive/20 text-destructive text-[8px] font-black uppercase tracking-wider rounded"
-                              >
-                                Delay
-                              </motion.span>
-                            )}
-                            {isPositive && factor.adjustment < 0 && (
-                              <motion.span
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="px-1.5 py-0.5 bg-success/20 text-success text-[8px] font-black uppercase tracking-wider rounded"
-                              >
-                                Faster
-                              </motion.span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Time impact badge */}
-                        <div className={cn(
-                          "flex items-center gap-1 px-2 py-1 rounded-lg",
-                          isNegative ? "bg-destructive/20" : "bg-success/20"
-                        )}>
-                          {isNegative ? (
-                            <TrendingDown className="w-3 h-3 text-destructive" />
-                          ) : (
-                            <TrendingUp className="w-3 h-3 text-success" />
-                          )}
-                          <span className={cn(
-                            "text-sm font-black tabular-nums",
-                            isNegative ? "text-destructive" : "text-success"
-                          )}>
-                            {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
-                          </span>
-                        </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn("text-[11px] font-bold", isNegative ? "text-red-400" : "text-success")}>{factor.name}</span>
+                        {isNegative && (
+                          <span className="px-1 py-0.5 bg-red-500/30 text-red-300 text-[7px] font-black uppercase rounded">Delay</span>
+                        )}
                       </div>
-
-                      {/* Description */}
-                      <p className={cn(
-                        "text-xs leading-relaxed mb-2",
-                        isNegative ? "text-destructive/70" : "text-success/70"
-                      )}>
-                        {factor.description}
-                      </p>
-
-                      {/* Severity bar */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted/20 rounded-full overflow-hidden">
-                          <motion.div
-                            className={cn(
-                              "h-full rounded-full",
-                              isNegative 
-                                ? "bg-gradient-to-r from-destructive/50 to-destructive" 
-                                : "bg-gradient-to-r from-success/50 to-success"
-                            )}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${severityPercent}%` }}
-                            transition={{ delay: 0.3 + 0.1 * index, duration: 0.6, ease: "easeOut" }}
-                          />
-                        </div>
-                        <span className="text-[9px] text-muted-foreground w-12 text-right">
-                          {severity < 0.3 ? 'Low' : severity < 0.7 ? 'Medium' : 'High'}
+                      <div className={cn("flex items-center gap-0.5 px-1.5 py-0.5 rounded", isNegative ? "bg-red-500/20" : "bg-success/20")}>
+                        {isNegative ? <TrendingDown className="w-2.5 h-2.5 text-red-400" /> : <TrendingUp className="w-2.5 h-2.5 text-success" />}
+                        <span className={cn("text-[10px] font-black tabular-nums", isNegative ? "text-red-400" : "text-success")}>
+                          {factor.adjustment > 0 ? '+' : ''}{factor.adjustment.toFixed(1)}h
                         </span>
                       </div>
+                    </div>
+                    <p className={cn("text-[9px] leading-tight mb-1", isNegative ? "text-red-300/70" : "text-success/70")}>{factor.description}</p>
+                    <div className="h-1 bg-muted/20 rounded-full overflow-hidden">
+                      <motion.div
+                        className={cn("h-full rounded-full", isNegative ? "bg-gradient-to-r from-red-500/50 to-red-500" : "bg-gradient-to-r from-success/50 to-success")}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${severityPercent}%` }}
+                        transition={{ delay: 0.2 + 0.05 * index, duration: 0.4 }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -372,63 +289,33 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
           })}
         </div>
 
-        {/* Footer summary */}
-        <div className="px-4 py-3 bg-muted/10 border-t border-border/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <Shield className="w-3 h-3" />
-              <span>Analysis confidence: <span className="font-semibold text-foreground">94%</span></span>
-            </div>
-            <div className="flex items-center gap-1">
-              {eta.factors.map((f, i) => (
-                <motion.div
-                  key={i}
-                  className={cn(
-                    "w-2 h-2 rounded-full",
-                    f.impact === 'negative' ? "bg-destructive" : "bg-success"
-                  )}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5 + 0.1 * i }}
-                />
-              ))}
-            </div>
+        <div className="px-3 py-2 bg-muted/10 border-t border-border/30 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+            <Shield className="w-3 h-3" />
+            <span>Confidence: <span className="font-bold text-foreground">94%</span></span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            {eta.factors.map((f, i) => (
+              <motion.div key={i} className={cn("w-1.5 h-1.5 rounded-full", f.impact === 'negative' ? "bg-red-400" : "bg-success")} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4 + 0.08 * i }} />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* AI Insight */}
+      {/* AI Insight - Compact */}
       {(eta.explanation || eta.recommendations.length > 0) && (
-        <motion.div 
-          className="glass-card p-4 border-l-4 border-l-primary relative overflow-hidden"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <motion.div 
-            className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full blur-2xl"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          />
-          
-          <div className="relative flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-4 h-4 text-primary" />
-            </div>
+        <motion.div className="glass-card p-3 border-l-2 border-l-primary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+          <div className="flex gap-2">
+            <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <h4 className="text-xs font-bold text-foreground mb-1">Route Intelligence</h4>
-              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">{eta.explanation}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mb-1.5">{eta.explanation}</p>
               {eta.recommendations.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-wrap gap-1">
                   {eta.recommendations.slice(0, 2).map((rec, idx) => (
-                    <motion.span 
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-[10px] font-medium rounded-md"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <ArrowRight className="w-2.5 h-2.5" />
-                      {rec.length > 35 ? rec.substring(0, 35) + '...' : rec}
-                    </motion.span>
+                    <span key={idx} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-medium rounded">
+                      <ArrowRight className="w-2 h-2" />
+                      {rec.length > 30 ? rec.substring(0, 30) + '...' : rec}
+                    </span>
                   ))}
                 </div>
               )}
