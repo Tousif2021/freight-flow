@@ -126,7 +126,7 @@ const SuccessAnimation: React.FC<{
           className="glass-card p-4 mb-6 glow-effect"
         >
           <div className="text-xs text-muted-foreground mb-1">Tracking Number</div>
-          <div className="text-xl font-mono font-bold text-primary">{trackingNumber}</div>
+          <div className="text-xl font-sans font-bold text-primary">{trackingNumber}</div>
         </motion.div>
 
         {/* Animated Truck */}
