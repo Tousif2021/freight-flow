@@ -208,7 +208,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
               y: 0
             }} transition={{
               delay: 0.5
-            }} className="text-4xl font-bold tracking-tight text-foreground font-serif">
+            }} className="text-4xl font-bold tracking-tight text-foreground font-sans">
                 {stats.averageDeliveryTime}
               </motion.span>
               <span className="text-sm text-muted-foreground mb-1.5">hours</span>
