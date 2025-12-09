@@ -239,7 +239,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-success/5 rounded-full group-hover:scale-150 transition-transform duration-500" />
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4 font-serif">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 font-sans">
                 <TrendingUp className="w-4 h-4 text-success" />
                 On-Time Delivery Rate
               </h3>
