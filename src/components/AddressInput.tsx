@@ -4,11 +4,14 @@ import { MapPin, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-interface LocationResult {
+import { supabase } from '@/integrations/supabase/client';
+
+export interface LocationResult {
   id: string;
   address: string;
   city: string;
   state: string;
+  country: string;
   zip: string;
   lat: number;
   lng: number;
@@ -22,70 +25,23 @@ interface AddressInputProps {
   icon?: 'origin' | 'destination';
 }
 
-// Mock geocoding - in production, use Mapbox Geocoding API
-const mockGeocode = async (query: string): Promise<LocationResult[]> => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  const mockLocations: Record<string, LocationResult[]> = {
-    'los angeles': [
-      { id: '1', address: '123 Main St', city: 'Los Angeles', state: 'CA', zip: '90001', lat: 34.0522, lng: -118.2437 },
-      { id: '2', address: '456 Broadway', city: 'Los Angeles', state: 'CA', zip: '90012', lat: 34.0511, lng: -118.2491 },
-    ],
-    'new york': [
-      { id: '3', address: '789 5th Ave', city: 'New York', state: 'NY', zip: '10001', lat: 40.7128, lng: -74.0060 },
-      { id: '4', address: '321 Wall St', city: 'New York', state: 'NY', zip: '10005', lat: 40.7074, lng: -74.0113 },
-    ],
-    'chicago': [
-      { id: '5', address: '555 Michigan Ave', city: 'Chicago', state: 'IL', zip: '60601', lat: 41.8781, lng: -87.6298 },
-    ],
-    'houston': [
-      { id: '6', address: '100 Main St', city: 'Houston', state: 'TX', zip: '77001', lat: 29.7604, lng: -95.3698 },
-    ],
-    'phoenix': [
-      { id: '7', address: '200 Central Ave', city: 'Phoenix', state: 'AZ', zip: '85001', lat: 33.4484, lng: -112.0740 },
-    ],
-    'dallas': [
-      { id: '8', address: '300 Commerce St', city: 'Dallas', state: 'TX', zip: '75201', lat: 32.7767, lng: -96.7970 },
-    ],
-    'seattle': [
-      { id: '9', address: '400 Pike St', city: 'Seattle', state: 'WA', zip: '98101', lat: 47.6062, lng: -122.3321 },
-    ],
-    'denver': [
-      { id: '10', address: '500 16th St', city: 'Denver', state: 'CO', zip: '80202', lat: 39.7392, lng: -104.9903 },
-    ],
-    'atlanta': [
-      { id: '11', address: '600 Peachtree St', city: 'Atlanta', state: 'GA', zip: '30308', lat: 33.7490, lng: -84.3880 },
-    ],
-    'miami': [
-      { id: '12', address: '700 Biscayne Blvd', city: 'Miami', state: 'FL', zip: '33132', lat: 25.7617, lng: -80.1918 },
-    ],
-  };
+// Real geocoding using Mapbox via edge function
+const geocodeAddress = async (query: string): Promise<LocationResult[]> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('geocode-address', {
+      body: { query, limit: 5 },
+    });
 
-  const lowerQuery = query.toLowerCase();
-  let results: LocationResult[] = [];
-  
-  for (const [key, locations] of Object.entries(mockLocations)) {
-    if (key.includes(lowerQuery) || lowerQuery.includes(key)) {
-      results = [...results, ...locations];
+    if (error) {
+      console.error('Geocoding error:', error);
+      return [];
     }
-  }
 
-  if (results.length === 0 && query.length >= 2) {
-    // Generate some mock results for any query
-    results = [
-      {
-        id: `gen-1-${query}`,
-        address: `123 ${query} St`,
-        city: query.charAt(0).toUpperCase() + query.slice(1),
-        state: 'CA',
-        zip: '90001',
-        lat: 34.0522 + Math.random() * 10,
-        lng: -118.2437 + Math.random() * 10,
-      },
-    ];
+    return data?.results || [];
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return [];
   }
-
-  return results.slice(0, 5);
 };
 
 const AddressInput: React.FC<AddressInputProps> = ({
@@ -131,7 +87,7 @@ const AddressInput: React.FC<AddressInputProps> = ({
     const searchTimeout = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const data = await mockGeocode(query);
+        const data = await geocodeAddress(query);
         setResults(data);
         setIsOpen(data.length > 0 && isFocused);
       } catch (error) {
@@ -147,7 +103,11 @@ const AddressInput: React.FC<AddressInputProps> = ({
   const handleSelect = (location: LocationResult) => {
     setHasSelected(true);
     onChange(location);
-    setQuery(`${location.address}, ${location.city}, ${location.state}`);
+    // Build display string with country for international addresses
+    const locationParts = [location.address, location.city];
+    if (location.state) locationParts.push(location.state);
+    if (location.country && !location.state) locationParts.push(location.country);
+    setQuery(locationParts.join(', '));
     setResults([]);
     setIsOpen(false);
   };
@@ -237,7 +197,8 @@ const AddressInput: React.FC<AddressInputProps> = ({
                 <div>
                   <div className="text-sm font-medium text-foreground">{result.address}</div>
                   <div className="text-xs text-muted-foreground">
-                    {result.city}, {result.state} {result.zip}
+                    {result.city}{result.state && `, ${result.state}`}{result.zip && ` ${result.zip}`}
+                    {result.country && ` · ${result.country}`}
                   </div>
                 </div>
               </motion.button>
@@ -254,7 +215,7 @@ const AddressInput: React.FC<AddressInputProps> = ({
           className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full text-xs text-primary"
         >
           <MapPin className="w-3 h-3" />
-          {value.city}, {value.state}
+          {value.city}{value.state ? `, ${value.state}` : value.country ? `, ${value.country}` : ''}
         </motion.div>
       )}
     </div>
