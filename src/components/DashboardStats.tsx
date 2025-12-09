@@ -52,7 +52,7 @@ const StatCard: React.FC<{
             {subValue}
           </div>}
       </div>
-              <motion.div className="text-3xl font-bold tracking-tight text-foreground mb-1 font-mono" initial={{
+              <motion.div className="text-3xl font-bold tracking-tight text-foreground mb-1 font-sans" initial={{
       scale: 0.5,
       opacity: 0
     }} animate={{
@@ -246,7 +246,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
               <span className="text-xs text-success font-medium bg-success/10 px-2 py-1 rounded-full">+2.5%</span>
             </div>
             <div className="flex items-end gap-2 mb-4">
-              <motion.span className="text-4xl font-bold tracking-tight text-foreground font-mono" initial={{
+              <motion.span className="text-4xl font-bold tracking-tight text-foreground font-sans tabular-nums" initial={{
               opacity: 0,
               y: 10
             }} animate={{
@@ -315,7 +315,7 @@ const DashboardStatsComponent: React.FC<DashboardStatsProps> = ({
                     {getStatusIcon(shipment.status)}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2 font-mono">
+                    <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2 font-sans">
                       {shipment.trackingNumber}
                       <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>

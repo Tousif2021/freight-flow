@@ -101,7 +101,7 @@ const TrackingView: React.FC<TrackingViewProps> = ({ shipment }) => {
               </span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
-              Tracking: <span className="font-mono">{shipment.trackingNumber}</span>
+              Tracking: <span className="font-sans">{shipment.trackingNumber}</span>
             </h2>
             <p className="text-sm text-muted-foreground">
               Created {formatDate(shipment.createdAt)}
@@ -164,7 +164,7 @@ const TrackingView: React.FC<TrackingViewProps> = ({ shipment }) => {
           <h3 className="text-sm font-semibold text-muted-foreground mb-2">
             Estimated Arrival
           </h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground mb-2 font-mono">
+          <div className="text-3xl font-bold tracking-tight text-foreground mb-2 font-sans">
             {formatDate(shipment.eta.estimatedArrival)}
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
