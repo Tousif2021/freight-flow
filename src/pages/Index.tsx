@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Plus, 
-  Truck, 
-  ArrowLeft,
-  Menu,
-  X
-} from 'lucide-react';
+import { LayoutDashboard, Plus, Truck, ArrowLeft, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MapView from '@/components/MapView';
 import AddressInput from '@/components/AddressInput';
@@ -22,22 +15,20 @@ import { CarrierMode, Shipment, DashboardStats as DashboardStatsType } from '@/t
 import { calculateETA, calculateDistance, estimateBaseDuration } from '@/lib/eta-calculator';
 import { api, mockStats, mockShipments } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-
 type View = 'dashboard' | 'quote' | 'tracking';
 type QuoteStep = 'locations' | 'carrier' | 'eta' | 'checkout';
-
 const Index = () => {
   const [view, setView] = useState<View>('dashboard');
   const [quoteStep, setQuoteStep] = useState<QuoteStep>('locations');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // Quote state
   const [origin, setOrigin] = useState<any>(null);
   const [destination, setDestination] = useState<any>(null);
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierMode | null>(null);
   const [eta, setEta] = useState<any>(null);
   const [distanceMiles, setDistanceMiles] = useState(0);
-  
+
   // Shipment state
   const [shipments, setShipments] = useState<Shipment[]>(mockShipments);
   const [stats] = useState<DashboardStatsType>(mockStats);
@@ -56,7 +47,6 @@ const Index = () => {
       setEta(calculatedEta);
     }
   }, [origin, destination, selectedCarrier]);
-
   const handleNewQuote = () => {
     setView('quote');
     setQuoteStep('locations');
@@ -65,20 +55,23 @@ const Index = () => {
     setSelectedCarrier(null);
     setEta(null);
   };
-
   const handleCheckout = async (data: CheckoutData) => {
     if (!origin || !destination || !selectedCarrier) return;
-    
     setIsCreating(true);
     try {
       const newShipment = await api.createShipment({
         origin,
         destination,
         carrierMode: selectedCarrier,
-        sender: { name: data.senderName, email: data.senderEmail },
-        receiver: { name: data.receiverName, email: data.receiverEmail },
+        sender: {
+          name: data.senderName,
+          email: data.senderEmail
+        },
+        receiver: {
+          name: data.receiverName,
+          email: data.receiverEmail
+        }
       });
-      
       setShipments([newShipment, ...shipments]);
       setNewTrackingNumber(newShipment.trackingNumber);
       setShowSuccess(true);
@@ -87,27 +80,23 @@ const Index = () => {
       setIsCreating(false);
     }
   };
-
   const handleSuccessContinue = () => {
     setShowSuccess(false);
     setView('tracking');
   };
-
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'quote', label: 'New Quote', icon: Plus },
-  ];
-
-  return (
-    <div className="min-h-screen bg-background">
+  const navItems = [{
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard
+  }, {
+    id: 'quote',
+    label: 'New Quote',
+    icon: Plus
+  }];
+  return <div className="min-h-screen bg-background">
       {/* Success Animation Overlay */}
       <AnimatePresence>
-        {showSuccess && (
-          <SuccessAnimation 
-            trackingNumber={newTrackingNumber} 
-            onContinue={handleSuccessContinue} 
-          />
-        )}
+        {showSuccess && <SuccessAnimation trackingNumber={newTrackingNumber} onContinue={handleSuccessContinue} />}
       </AnimatePresence>
 
       {/* Header */}
@@ -125,58 +114,40 @@ const Index = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
-            {navItems.map((item) => (
-              <Button
-                key={item.id}
-                variant={item.id === 'quote' ? 'hero' : (view === item.id ? 'default' : 'ghost')}
-                size="sm"
-                className={item.id === 'quote' ? 'border border-primary/30' : ''}
-                onClick={() => item.id === 'quote' ? handleNewQuote() : setView(item.id as View)}
-              >
+            {navItems.map(item => <Button key={item.id} variant={item.id === 'quote' ? 'hero' : view === item.id ? 'default' : 'ghost'} size="sm" className={item.id === 'quote' ? 'border border-primary/30' : ''} onClick={() => item.id === 'quote' ? handleNewQuote() : setView(item.id as View)}>
                 <item.icon className="w-4 h-4" />
                 {item.label}
-              </Button>
-            ))}
+              </Button>)}
           </nav>
 
           {/* Mobile Menu Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X /> : <Menu />}
           </Button>
         </div>
 
         {/* Mobile Nav */}
         <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-border/50 bg-background"
-            >
+          {mobileMenuOpen && <motion.div initial={{
+          opacity: 0,
+          height: 0
+        }} animate={{
+          opacity: 1,
+          height: 'auto'
+        }} exit={{
+          opacity: 0,
+          height: 0
+        }} className="md:hidden border-t border-border/50 bg-background">
               <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
-                {navItems.map((item) => (
-                  <Button
-                    key={item.id}
-                    variant={item.id === 'quote' ? 'hero' : (view === item.id ? 'default' : 'ghost')}
-                    className={cn("justify-start", item.id === 'quote' && 'border border-primary/30')}
-                    onClick={() => {
-                      item.id === 'quote' ? handleNewQuote() : setView(item.id as View);
-                      setMobileMenuOpen(false);
-                    }}
-                  >
+                {navItems.map(item => <Button key={item.id} variant={item.id === 'quote' ? 'hero' : view === item.id ? 'default' : 'ghost'} className={cn("justify-start", item.id === 'quote' && 'border border-primary/30')} onClick={() => {
+              item.id === 'quote' ? handleNewQuote() : setView(item.id as View);
+              setMobileMenuOpen(false);
+            }}>
                     <item.icon className="w-4 h-4" />
                     {item.label}
-                  </Button>
-                ))}
+                  </Button>)}
               </div>
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
       </header>
 
@@ -185,38 +156,38 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <AnimatePresence mode="wait">
             {/* Dashboard View */}
-            {view === 'dashboard' && (
-              <motion.div
-                key="dashboard"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
-              >
+            {view === 'dashboard' && <motion.div key="dashboard" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }} className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
                   <p className="text-muted-foreground font-medium">Overview of your shipments</p>
                 </div>
 
-                <DashboardStats
-                  stats={stats}
-                  recentShipments={shipments}
-                  onViewShipment={(shipment) => {
-                    setSelectedShipment(shipment);
-                    setView('tracking');
-                  }}
-                />
-              </motion.div>
-            )}
+                <DashboardStats stats={stats} recentShipments={shipments} onViewShipment={shipment => {
+              setSelectedShipment(shipment);
+              setView('tracking');
+            }} />
+              </motion.div>}
 
             {/* Quote View */}
-            {view === 'quote' && (
-              <motion.div
-                key="quote"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+            {view === 'quote' && <motion.div key="quote" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
                 <Button variant="ghost" size="sm" onClick={() => setView('dashboard')} className="mb-4">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </Button>
@@ -225,162 +196,130 @@ const Index = () => {
                   {/* Left: Form */}
                   <div className="space-y-6">
                     <AnimatePresence mode="wait">
-                      {(quoteStep === 'locations' || quoteStep === 'carrier') && (
-                        <motion.div
-                          key="quote-entry"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="glass-card p-6"
-                        >
+                      {(quoteStep === 'locations' || quoteStep === 'carrier') && <motion.div key="quote-entry" initial={{
+                    opacity: 0,
+                    x: -20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-6 px-[24px]">
                           <h2 className="text-xl font-bold tracking-tight text-foreground mb-6">Get a Quote</h2>
                           
                           <div className="space-y-4 mb-6">
-                            <AddressInput
-                              label="Origin"
-                              placeholder="Enter pickup city (e.g., Los Angeles)"
-                              value={origin}
-                              onChange={setOrigin}
-                              icon="origin"
-                            />
-                            <AddressInput
-                              label="Destination"
-                              placeholder="Enter delivery city (e.g., New York)"
-                              value={destination}
-                              onChange={setDestination}
-                              icon="destination"
-                            />
+                            <AddressInput label="Origin" placeholder="Enter pickup city (e.g., Los Angeles)" value={origin} onChange={setOrigin} icon="origin" />
+                            <AddressInput label="Destination" placeholder="Enter delivery city (e.g., New York)" value={destination} onChange={setDestination} icon="destination" />
                           </div>
 
                           <AnimatePresence>
-                            {origin && destination && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="overflow-hidden"
-                              >
+                            {origin && destination && <motion.div initial={{
+                        opacity: 0,
+                        height: 0
+                      }} animate={{
+                        opacity: 1,
+                        height: 'auto'
+                      }} exit={{
+                        opacity: 0,
+                        height: 0
+                      }} transition={{
+                        duration: 0.3
+                      }} className="overflow-hidden">
                                 <div className="pt-4 border-t border-border/30">
-                                  <CarrierSelector
-                                    selectedCarrier={selectedCarrier}
-                                    onSelect={(carrier) => {
-                                      setSelectedCarrier(carrier);
-                                    }}
-                                    compact
-                                  />
+                                  <CarrierSelector selectedCarrier={selectedCarrier} onSelect={carrier => {
+                            setSelectedCarrier(carrier);
+                          }} compact />
                                   
-                                  {selectedCarrier && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="mt-6"
-                                    >
-                                      <Button 
-                                        variant="hero" 
-                                        className="w-full" 
-                                        onClick={() => setQuoteStep('eta')}
-                                      >
+                                  {selectedCarrier && <motion.div initial={{
+                            opacity: 0,
+                            y: 10
+                          }} animate={{
+                            opacity: 1,
+                            y: 0
+                          }} className="mt-6">
+                                      <Button variant="hero" className="w-full" onClick={() => setQuoteStep('eta')}>
                                         Calculate ETA
                                       </Button>
-                                    </motion.div>
-                                  )}
+                                    </motion.div>}
                                 </div>
-                              </motion.div>
-                            )}
+                              </motion.div>}
                           </AnimatePresence>
-                        </motion.div>
-                      )}
+                        </motion.div>}
 
-                      {quoteStep === 'eta' && eta && (
-                        <motion.div
-                          key="quote-eta"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="glass-card p-4"
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setQuoteStep('locations')}
-                            className="mb-3 -ml-2"
-                          >
+                      {quoteStep === 'eta' && eta && <motion.div key="quote-eta" initial={{
+                    opacity: 0,
+                    x: 20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-4">
+                          <Button variant="ghost" size="sm" onClick={() => setQuoteStep('locations')} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Edit Route
                           </Button>
-                          <ETADisplay
-                            eta={eta}
-                            distanceMiles={distanceMiles}
-                            originCity={origin?.city || ''}
-                            destinationCity={destination?.city || ''}
-                          />
+                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ''} destinationCity={destination?.city || ''} />
                           <Button variant="hero" className="w-full mt-4" onClick={() => setQuoteStep('checkout')}>
                             Proceed to Checkout
                           </Button>
-                        </motion.div>
-                      )}
+                        </motion.div>}
 
-                      {quoteStep === 'checkout' && (
-                        <motion.div
-                          key="quote-checkout"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="glass-card p-4"
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setQuoteStep('eta')}
-                            className="mb-3 -ml-2"
-                          >
+                      {quoteStep === 'checkout' && <motion.div key="quote-checkout" initial={{
+                    opacity: 0,
+                    x: 20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-4">
+                          <Button variant="ghost" size="sm" onClick={() => setQuoteStep('eta')} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Back to ETA
                           </Button>
                           <CheckoutForm onSubmit={handleCheckout} isLoading={isCreating} />
-                        </motion.div>
-                      )}
+                        </motion.div>}
                     </AnimatePresence>
                   </div>
 
                   {/* Right: Map with AI Advisor */}
                   <div className="h-[350px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24 relative">
-                    <MapView
-                      origin={origin ? { lat: origin.lat, lng: origin.lng, label: origin.city } : undefined}
-                      destination={destination ? { lat: destination.lat, lng: destination.lng, label: destination.city } : undefined}
-                      showRoute={!!origin && !!destination && !!selectedCarrier}
-                    />
+                    <MapView origin={origin ? {
+                  lat: origin.lat,
+                  lng: origin.lng,
+                  label: origin.city
+                } : undefined} destination={destination ? {
+                  lat: destination.lat,
+                  lng: destination.lng,
+                  label: destination.city
+                } : undefined} showRoute={!!origin && !!destination && !!selectedCarrier} />
                     {/* AI Advisor Popup */}
-                    {quoteStep === 'eta' && eta && (
-                      <AIAdvisor 
-                        eta={eta} 
-                        carrierMode={selectedCarrier}
-                        onCarrierChange={(carrier) => setSelectedCarrier(carrier)}
-                      />
-                    )}
+                    {quoteStep === 'eta' && eta && <AIAdvisor eta={eta} carrierMode={selectedCarrier} onCarrierChange={carrier => setSelectedCarrier(carrier)} />}
                   </div>
                 </div>
-              </motion.div>
-            )}
+              </motion.div>}
 
             {/* Tracking View */}
-            {view === 'tracking' && selectedShipment && (
-              <motion.div
-                key="tracking"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+            {view === 'tracking' && selectedShipment && <motion.div key="tracking" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
                 <Button variant="ghost" size="sm" onClick={() => setView('dashboard')} className="mb-4">
                   <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </Button>
                 <TrackingView shipment={selectedShipment} />
-              </motion.div>
-            )}
+              </motion.div>}
           </AnimatePresence>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
