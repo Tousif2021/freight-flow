@@ -5,10 +5,23 @@ import { motion } from 'framer-motion';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoidG91c2lmMjUiLCJhIjoiY21peDI1dGpxMDF2aTNkcXN1NzMyajhtOCJ9.GB70BEjjqbc8kXnGMA4uTQ';
 
+export interface TrafficIncident {
+  id: string;
+  lat: number;
+  lng: number;
+  type: string;
+  severity: 'minor' | 'moderate' | 'severe';
+  description: string;
+  delay: number;
+  from?: string;
+  to?: string;
+}
+
 interface MapViewProps {
   origin?: { lat: number; lng: number; label?: string };
   destination?: { lat: number; lng: number; label?: string };
   currentLocation?: { lat: number; lng: number };
+  incidents?: TrafficIncident[];
   showRoute?: boolean;
   interactive?: boolean;
   className?: string;
@@ -19,6 +32,7 @@ const MapView: React.FC<MapViewProps> = ({
   origin,
   destination,
   currentLocation,
+  incidents = [],
   showRoute = false,
   interactive = true,
   className = '',
@@ -28,10 +42,16 @@ const MapView: React.FC<MapViewProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const incidentMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
+  }, []);
+
+  const clearIncidentMarkers = useCallback(() => {
+    incidentMarkersRef.current.forEach(marker => marker.remove());
+    incidentMarkersRef.current = [];
   }, []);
 
   const createMarkerElement = (type: 'origin' | 'destination' | 'current') => {
@@ -69,6 +89,52 @@ const MapView: React.FC<MapViewProps> = ({
     return el;
   };
 
+  const createIncidentMarkerElement = (incident: TrafficIncident) => {
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-center cursor-pointer';
+    
+    const colorMap = {
+      minor: { bg: '#EAB308', border: '#CA8A04', shadow: 'rgba(234,179,8,0.4)' },
+      moderate: { bg: '#F97316', border: '#EA580C', shadow: 'rgba(249,115,22,0.4)' },
+      severe: { bg: '#EF4444', border: '#DC2626', shadow: 'rgba(239,68,68,0.5)' },
+    };
+    
+    const colors = colorMap[incident.severity];
+    
+    const iconMap: Record<string, string> = {
+      accident: '🚗',
+      construction: '🚧',
+      road_closure: '⛔',
+      road_works: '🔨',
+      congestion: '🚦',
+      hazard: '⚠️',
+      flooding: '🌊',
+      fog: '🌫️',
+      wind: '💨',
+      broken_down_vehicle: '🚙',
+      lane_closure: '🚧',
+      detour: '↪️',
+      incident: '⚠️',
+    };
+    
+    const icon = iconMap[incident.type] || '⚠️';
+    
+    el.innerHTML = `
+      <div class="relative group">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center shadow-lg transform transition-transform hover:scale-110" 
+             style="background: ${colors.bg}; border: 2px solid ${colors.border}; box-shadow: 0 0 12px ${colors.shadow};">
+          <span class="text-xs">${icon}</span>
+        </div>
+        ${incident.severity === 'severe' ? `
+          <div class="absolute -inset-1 rounded-full animate-ping opacity-40" 
+               style="background: ${colors.bg};"></div>
+        ` : ''}
+      </div>
+    `;
+    
+    return el;
+  };
+
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -93,10 +159,11 @@ const MapView: React.FC<MapViewProps> = ({
 
     return () => {
       clearMarkers();
+      clearIncidentMarkers();
       map.current?.remove();
       map.current = null;
     };
-  }, [interactive, onMapLoad, clearMarkers]);
+  }, [interactive, onMapLoad, clearMarkers, clearIncidentMarkers]);
 
   useEffect(() => {
     if (!map.current || !isLoaded) return;
@@ -153,11 +220,49 @@ const MapView: React.FC<MapViewProps> = ({
       }
       
       map.current.fitBounds(bounds, {
-        padding: { top: 80, bottom: 80, left: 80, right: 80 },
+        padding: { top: 100, bottom: 100, left: 100, right: 100 },
         duration: 1000,
       });
     }
-  }, [origin, destination, currentLocation, isLoaded, clearMarkers]);
+  }, [incidents, isLoaded, clearIncidentMarkers]);
+
+  // Add incident markers
+  useEffect(() => {
+    if (!map.current || !isLoaded) return;
+
+    clearIncidentMarkers();
+
+    incidents.forEach((incident) => {
+      if (!incident.lat || !incident.lng) return;
+      
+      const el = createIncidentMarkerElement(incident);
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([incident.lng, incident.lat])
+        .addTo(map.current!);
+
+      // Add popup with incident details
+      const popup = new mapboxgl.Popup({ 
+        offset: 25, 
+        closeButton: false,
+        className: 'incident-popup'
+      }).setHTML(`
+        <div class="p-2 max-w-[200px]">
+          <div class="font-bold text-sm mb-1 capitalize">${incident.type.replace('_', ' ')}</div>
+          <div class="text-xs text-gray-300 mb-1">${incident.description}</div>
+          ${incident.delay > 0 ? `<div class="text-xs text-amber-400">Delay: ~${Math.round(incident.delay / 60)} min</div>` : ''}
+          ${incident.from ? `<div class="text-[10px] text-gray-400 mt-1">${incident.from}${incident.to ? ` → ${incident.to}` : ''}</div>` : ''}
+        </div>
+      `);
+
+      marker.setPopup(popup);
+      
+      // Show popup on hover
+      el.addEventListener('mouseenter', () => marker.togglePopup());
+      el.addEventListener('mouseleave', () => marker.togglePopup());
+
+      incidentMarkersRef.current.push(marker);
+    });
+  }, [incidents, isLoaded, clearIncidentMarkers]);
 
   // Draw route
   useEffect(() => {

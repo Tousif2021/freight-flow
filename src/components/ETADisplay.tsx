@@ -8,6 +8,9 @@ import {
   Route,
   Calendar,
   CloudSnow,
+  CloudRain,
+  Cloud,
+  Sun,
   Loader2,
   Shield,
   Activity,
@@ -22,6 +25,27 @@ import { supabase } from "@/integrations/supabase/client";
 import LivePulseIndicator from "./LivePulseIndicator";
 import RouteTrafficBar from "./RouteTrafficBar";
 import TomTomTrafficBar, { TrafficData } from "./TomTomTrafficBar";
+import { TrafficIncident } from "./MapView";
+
+interface WeatherData {
+  condition: string;
+  description: string;
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  visibility: number;
+  severity: "clear" | "mild" | "moderate" | "severe";
+}
+
+interface WeatherResponse {
+  origin: WeatherData;
+  destination: WeatherData;
+  routeImpact: {
+    delayFactor: number;
+    riskLevel: "low" | "medium" | "high";
+    warnings: string[];
+  };
+}
 
 interface ETADisplayProps {
   eta: ETAPrediction;
@@ -32,14 +56,16 @@ interface ETADisplayProps {
   originLng?: number;
   destLat?: number;
   destLng?: number;
+  onTrafficIncidents?: (incidents: TrafficIncident[]) => void;
 }
 
-const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity, destinationCity, originLat, originLng, destLat, destLng }) => {
+const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity, destinationCity, originLat, originLng, destLat, destLng, onTrafficIncidents }) => {
   const [trafficStatus, setTrafficStatus] = useState<"loading" | "done">("loading");
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "done">("loading");
   const [trafficProgress, setTrafficProgress] = useState(0);
   const [weatherProgress, setWeatherProgress] = useState(0);
   const [liveTrafficData, setLiveTrafficData] = useState<TrafficData | null>(null);
+  const [liveWeatherData, setLiveWeatherData] = useState<WeatherResponse | null>(null);
 
   // Fetch live traffic data from TomTom
   const fetchTrafficData = useCallback(async () => {
@@ -51,18 +77,39 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
       });
       if (!error && data) {
         setLiveTrafficData(data);
+        // Pass incidents to parent for map display
+        if (data.incidents && onTrafficIncidents) {
+          onTrafficIncidents(data.incidents);
+        }
       }
     } catch (err) {
       console.error("Traffic fetch error:", err);
+    }
+  }, [originLat, originLng, destLat, destLng, onTrafficIncidents]);
+
+  // Fetch live weather data from OpenWeather
+  const fetchWeatherData = useCallback(async () => {
+    if (!originLat || !originLng || !destLat || !destLng) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("get-weather", {
+        body: { originLat, originLng, destLat, destLng },
+      });
+      if (!error && data) {
+        setLiveWeatherData(data);
+      }
+    } catch (err) {
+      console.error("Weather fetch error:", err);
     }
   }, [originLat, originLng, destLat, destLng]);
 
   // Fetch traffic data on mount and set up refresh
   useEffect(() => {
     fetchTrafficData();
+    fetchWeatherData();
     const refreshInterval = setInterval(fetchTrafficData, 60000);
     return () => clearInterval(refreshInterval);
-  }, [fetchTrafficData]);
+  }, [fetchTrafficData, fetchWeatherData]);
 
   useEffect(() => {
     setTrafficStatus("loading");
@@ -143,6 +190,42 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
   };
 
   const trafficImpact = getTrafficImpactLevel();
+
+  // Dynamic weather impact based on live OpenWeather data
+  const getWeatherImpactLevel = () => {
+    if (!liveWeatherData) return { level: "moderate", color: "amber" };
+    switch (liveWeatherData.routeImpact.riskLevel) {
+      case "low": return { level: "low", color: "teal" };
+      case "medium": return { level: "moderate", color: "amber" };
+      case "high": return { level: "high", color: "red" };
+      default: return { level: "moderate", color: "amber" };
+    }
+  };
+
+  const getWeatherDescription = () => {
+    if (!liveWeatherData) return `Weather conditions along route`;
+    const dest = liveWeatherData.destination;
+    const warnings = liveWeatherData.routeImpact.warnings;
+    if (warnings.length > 0) {
+      return warnings[0];
+    }
+    return `${dest.description} at ${destinationCity.split(",")[0]} (${Math.round(dest.temperature)}°F)`;
+  };
+
+  const getWeatherIcon = () => {
+    if (!liveWeatherData) return CloudSnow;
+    const condition = liveWeatherData.destination.condition;
+    switch (condition) {
+      case "rain": return CloudRain;
+      case "snow": return CloudSnow;
+      case "clear": return Sun;
+      default: return Cloud;
+    }
+  };
+
+  const weatherImpact = getWeatherImpactLevel();
+  const WeatherIcon = getWeatherIcon();
+  const weatherDelayHours = liveWeatherData ? liveWeatherData.routeImpact.delayFactor * (weatherFactor?.adjustment || 0.5) : (weatherFactor?.adjustment || 0.5);
 
   // Card hover animation variants
   const cardHoverVariants = {
@@ -421,7 +504,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
         </div>
 
         <div className="p-2 space-y-1.5">
-          {/* Carrier Mode Card - Neutral slate bg with hover */}
+          {/* Carrier Mode Card - Check for zero impact */}
           {carrierFactor && (
             <motion.div
               initial={{
@@ -437,48 +520,91 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
               transition={{
                 delay: 0.05,
               }}
-              className="relative rounded-lg p-3 border bg-slate-700/50 border-red-500/30 cursor-pointer group"
+              className={cn(
+                "relative rounded-lg p-3 border cursor-pointer group",
+                carrierFactor.adjustment === 0 
+                  ? "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]"
+                  : "bg-slate-700/50 border-red-500/30"
+              )}
             >
-              <motion.div className="absolute inset-0 bg-red-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <motion.div className={cn(
+                "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                carrierFactor.adjustment === 0 ? "bg-teal/5" : "bg-red-500/5"
+              )} />
               <div className="relative flex items-center gap-2">
                 <motion.div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/20"
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    carrierFactor.adjustment === 0 ? "bg-teal/20" : "bg-red-500/20"
+                  )}
                   variants={iconHoverVariants}
-                  animate={{
+                  animate={carrierFactor.adjustment !== 0 ? {
                     boxShadow: [
                       "0 0 0 0 rgba(239,68,68,0.3)",
                       "0 0 0 6px rgba(239,68,68,0)",
                       "0 0 0 0 rgba(239,68,68,0)",
                     ],
-                  }}
+                  } : {}}
                   transition={{
                     duration: 1.5,
                     repeat: Infinity,
                   }}
                 >
-                  <Truck className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                  <Truck className={cn(
+                    "w-4 h-4 group-hover:scale-110 transition-transform",
+                    carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                  )} />
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[11px] font-bold text-red-400">Carrier Mode</span>
-                    <span className="px-1.5 py-0.5 bg-red-500/30 text-red-300 text-[8px] font-black uppercase rounded">
-                      HIGH IMPACT
+                    <span className={cn(
+                      "text-[11px] font-bold",
+                      carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                    )}>Carrier Mode</span>
+                    <span className={cn(
+                      "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
+                      carrierFactor.adjustment === 0 
+                        ? "bg-teal/30 text-teal" 
+                        : "bg-red-500/30 text-red-300"
+                    )}>
+                      {carrierFactor.adjustment === 0 ? "NO IMPACT" : "HIGH IMPACT"}
                     </span>
                   </div>
-                  <p className="text-[9px] text-red-300/70">{carrierFactor.description}</p>
-                  <p className="text-[9px] text-amber/80 font-medium mt-1">
-                    💡 AI suggests direct truckload to save ~9–11h
-                  </p>
+                  <p className={cn(
+                    "text-[9px]",
+                    carrierFactor.adjustment === 0 ? "text-teal/70" : "text-red-300/70"
+                  )}>{carrierFactor.description}</p>
+                  {carrierFactor.adjustment !== 0 && (
+                    <p className="text-[9px] text-amber/80 font-medium mt-1">
+                      💡 AI suggests direct truckload to save ~9–11h
+                    </p>
+                  )}
                 </div>
                 <motion.div
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 group-hover:bg-red-500/30 transition-colors"
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded transition-colors",
+                    carrierFactor.adjustment === 0 
+                      ? "bg-teal/20 group-hover:bg-teal/30" 
+                      : "bg-red-500/20 group-hover:bg-red-500/30"
+                  )}
                   whileHover={{
                     scale: 1.05,
                   }}
                 >
-                  <Truck className="w-3 h-3 text-red-400" />
-                  <Clock className="w-2.5 h-2.5 text-red-400" />
-                  <span className="text-[10px] font-black text-red-400">+{carrierFactor.adjustment.toFixed(1)}h</span>
+                  {carrierFactor.adjustment === 0 ? (
+                    <Check className="w-3 h-3 text-teal" />
+                  ) : (
+                    <>
+                      <Truck className="w-3 h-3 text-red-400" />
+                      <Clock className="w-2.5 h-2.5 text-red-400" />
+                    </>
+                  )}
+                  <span className={cn(
+                    "text-[10px] font-black",
+                    carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                  )}>
+                    {carrierFactor.adjustment === 0 ? "± 0.0h" : `+${carrierFactor.adjustment.toFixed(1)}h`}
+                  </span>
                 </motion.div>
               </div>
             </motion.div>
@@ -651,7 +777,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
             </motion.div>
           )}
 
-          {/* Day of Week Card - Soft teal bg with hover */}
+          {/* Day of Week Card - Dynamic styling based on impact */}
           {dayFactor && (
             <motion.div
               initial={{
@@ -667,36 +793,74 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
               transition={{
                 delay: 0.15,
               }}
-              className="relative rounded-lg p-3 border bg-teal/10 border-teal/30 cursor-pointer group"
+              className={cn(
+                "relative rounded-lg p-3 border cursor-pointer group",
+                dayFactor.adjustment === 0 
+                  ? "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]"
+                  : "bg-amber/10 border-amber/30"
+              )}
             >
-              <motion.div className="absolute inset-0 bg-teal/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <motion.div className={cn(
+                "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                dayFactor.adjustment === 0 ? "bg-teal/5" : "bg-amber/5"
+              )} />
               <div className="relative flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal/20">
-                  <Calendar className="w-4 h-4 text-teal group-hover:scale-110 transition-transform" />
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center",
+                  dayFactor.adjustment === 0 ? "bg-teal/20" : "bg-amber/20"
+                )}>
+                  <Calendar className={cn(
+                    "w-4 h-4 group-hover:scale-110 transition-transform",
+                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                  )} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[11px] font-bold text-teal">Day of Week</span>
-                    <span className="px-1.5 py-0.5 bg-teal/30 text-teal text-[8px] font-black uppercase rounded">
-                      STABLE
+                    <span className={cn(
+                      "text-[11px] font-bold",
+                      dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                    )}>Day of Week</span>
+                    <span className={cn(
+                      "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
+                      dayFactor.adjustment === 0 
+                        ? "bg-teal/30 text-teal" 
+                        : "bg-amber/30 text-amber"
+                    )}>
+                      {dayFactor.adjustment === 0 ? "NO IMPACT" : "MODERATE"}
                     </span>
                   </div>
-                  <p className="text-[9px] text-teal/70">Standard weekday operations (no holiday impact)</p>
+                  <p className={cn(
+                    "text-[9px]",
+                    dayFactor.adjustment === 0 ? "text-teal/70" : "text-amber/70"
+                  )}>{dayFactor.description}</p>
                 </div>
                 <motion.div
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-teal/20 group-hover:bg-teal/30 transition-colors"
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded transition-colors",
+                    dayFactor.adjustment === 0 
+                      ? "bg-teal/20 group-hover:bg-teal/30" 
+                      : "bg-amber/20 group-hover:bg-amber/30"
+                  )}
                   whileHover={{
                     scale: 1.05,
                   }}
                 >
-                  <Check className="w-3 h-3 text-teal" />
-                  <span className="text-[10px] font-black text-teal">± 0.0 h</span>
+                  <Check className={cn(
+                    "w-3 h-3",
+                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                  )} />
+                  <span className={cn(
+                    "text-[10px] font-black",
+                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                  )}>
+                    {dayFactor.adjustment === 0 ? "± 0.0h" : `+${dayFactor.adjustment.toFixed(1)}h`}
+                  </span>
                 </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* Weather Card - With grain overlay and live feed */}
+          {/* Weather Card - Dynamic based on OpenWeather data */}
           {weatherFactor && (
             <motion.div
               initial={{
@@ -712,7 +876,12 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
               transition={{
                 delay: 0.2,
               }}
-              className="relative rounded-lg p-3 border bg-slate-700/50 border-amber/30 overflow-hidden cursor-pointer group"
+              className={cn(
+                "relative rounded-lg p-3 border overflow-hidden cursor-pointer group",
+                weatherImpact.color === "teal" && "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]",
+                weatherImpact.color === "amber" && "bg-slate-700/50 border-amber/30",
+                weatherImpact.color === "red" && "bg-slate-700/50 border-red-500/30"
+              )}
             >
               {/* Subtle diagonal grain overlay */}
               <div
@@ -721,16 +890,41 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
                 }}
               />
-              <motion.div className="absolute inset-0 bg-amber/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <motion.div className={cn(
+                "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                weatherImpact.color === "teal" && "bg-teal/5",
+                weatherImpact.color === "amber" && "bg-amber/5",
+                weatherImpact.color === "red" && "bg-red-500/5"
+              )} />
               <div className="relative flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-amber/20">
-                  <CloudSnow className="w-4 h-4 text-amber group-hover:scale-110 transition-transform" />
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center",
+                  weatherImpact.color === "teal" && "bg-teal/20",
+                  weatherImpact.color === "amber" && "bg-amber/20",
+                  weatherImpact.color === "red" && "bg-red-500/20"
+                )}>
+                  <WeatherIcon className={cn(
+                    "w-4 h-4 group-hover:scale-110 transition-transform",
+                    weatherImpact.color === "teal" && "text-teal",
+                    weatherImpact.color === "amber" && "text-amber",
+                    weatherImpact.color === "red" && "text-red-400"
+                  )} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[11px] font-bold text-amber">Weather</span>
-                    <span className="px-1.5 py-0.5 bg-amber/30 text-amber text-[8px] font-black uppercase rounded">
-                      MODERATE IMPACT
+                    <span className={cn(
+                      "text-[11px] font-bold",
+                      weatherImpact.color === "teal" && "text-teal",
+                      weatherImpact.color === "amber" && "text-amber",
+                      weatherImpact.color === "red" && "text-red-400"
+                    )}>Weather</span>
+                    <span className={cn(
+                      "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
+                      weatherImpact.color === "teal" && "bg-teal/30 text-teal",
+                      weatherImpact.color === "amber" && "bg-amber/30 text-amber",
+                      weatherImpact.color === "red" && "bg-red-500/30 text-red-300"
+                    )}>
+                      {weatherImpact.level === "low" ? "NO IMPACT" : weatherImpact.level === "moderate" ? "MODERATE" : "HIGH IMPACT"}
                     </span>
                     {/* Live Feed Indicator */}
                     <div className="flex items-center gap-1 ml-1">
@@ -744,22 +938,61 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                           repeat: Infinity,
                         }}
                       >
-                        <Radio className="w-2.5 h-2.5 text-amber" />
+                        <Radio className={cn(
+                          "w-2.5 h-2.5",
+                          weatherImpact.color === "teal" && "text-teal",
+                          weatherImpact.color === "amber" && "text-amber",
+                          weatherImpact.color === "red" && "text-red-400"
+                        )} />
                       </motion.div>
-                      <span className="text-[7px] text-amber/70 uppercase font-semibold">Live</span>
+                      <span className={cn(
+                        "text-[7px] uppercase font-semibold",
+                        weatherImpact.color === "teal" && "text-teal/70",
+                        weatherImpact.color === "amber" && "text-amber/70",
+                        weatherImpact.color === "red" && "text-red-400/70"
+                      )}>Live</span>
                     </div>
                   </div>
-                  <p className="text-[9px] text-amber/70">Light snowfall in Midwest corridor</p>
-                  <p className="text-[9px] text-amber/60 mt-0.5">Plows may slow travel on key segments</p>
+                  <p className={cn(
+                    "text-[9px]",
+                    weatherImpact.color === "teal" && "text-teal/70",
+                    weatherImpact.color === "amber" && "text-amber/70",
+                    weatherImpact.color === "red" && "text-red-300/70"
+                  )}>{getWeatherDescription()}</p>
+                  {liveWeatherData && liveWeatherData.routeImpact.warnings.length > 1 && (
+                    <p className={cn(
+                      "text-[9px] mt-0.5",
+                      weatherImpact.color === "teal" && "text-teal/60",
+                      weatherImpact.color === "amber" && "text-amber/60",
+                      weatherImpact.color === "red" && "text-red-300/60"
+                    )}>{liveWeatherData.routeImpact.warnings[1]}</p>
+                  )}
                 </div>
                 <motion.div
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-amber/20 group-hover:bg-amber/30 transition-colors"
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded transition-colors",
+                    weatherImpact.color === "teal" && "bg-teal/20 group-hover:bg-teal/30",
+                    weatherImpact.color === "amber" && "bg-amber/20 group-hover:bg-amber/30",
+                    weatherImpact.color === "red" && "bg-red-500/20 group-hover:bg-red-500/30"
+                  )}
                   whileHover={{
                     scale: 1.05,
                   }}
                 >
-                  <CloudSnow className="w-3 h-3 text-amber" />
-                  <span className="text-[10px] font-black text-amber">+{weatherFactor.adjustment.toFixed(1)}h</span>
+                  <WeatherIcon className={cn(
+                    "w-3 h-3",
+                    weatherImpact.color === "teal" && "text-teal",
+                    weatherImpact.color === "amber" && "text-amber",
+                    weatherImpact.color === "red" && "text-red-400"
+                  )} />
+                  <span className={cn(
+                    "text-[10px] font-black",
+                    weatherImpact.color === "teal" && "text-teal",
+                    weatherImpact.color === "amber" && "text-amber",
+                    weatherImpact.color === "red" && "text-red-400"
+                  )}>
+                    {weatherImpact.level === "low" ? "± 0.0h" : `+${weatherDelayHours.toFixed(1)}h`}
+                  </span>
                 </motion.div>
               </div>
             </motion.div>

@@ -15,6 +15,7 @@ import { CarrierMode, Shipment, DashboardStats as DashboardStatsType } from '@/t
 import { calculateETA, calculateDistance, estimateBaseDuration } from '@/lib/eta-calculator';
 import { api, mockStats, mockShipments } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { TrafficIncident } from '@/components/MapView';
 type View = 'dashboard' | 'quote' | 'tracking';
 type QuoteStep = 'locations' | 'carrier' | 'eta' | 'checkout';
 const Index = () => {
@@ -36,6 +37,7 @@ const Index = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [newTrackingNumber, setNewTrackingNumber] = useState('');
+  const [trafficIncidents, setTrafficIncidents] = useState<TrafficIncident[]>([]);
 
   // Calculate ETA when carrier is selected
   useEffect(() => {
@@ -260,7 +262,7 @@ const Index = () => {
                           <Button variant="ghost" size="sm" onClick={() => setQuoteStep('locations')} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Edit Route
                           </Button>
-                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ''} destinationCity={destination?.city || ''} originLat={origin?.lat} originLng={origin?.lng} destLat={destination?.lat} destLng={destination?.lng} />
+                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ''} destinationCity={destination?.city || ''} originLat={origin?.lat} originLng={origin?.lng} destLat={destination?.lat} destLng={destination?.lng} onTrafficIncidents={setTrafficIncidents} />
                           <Button variant="hero" className="w-full mt-4" onClick={() => setQuoteStep('checkout')}>
                             Proceed to Checkout
                           </Button>
@@ -294,7 +296,7 @@ const Index = () => {
                   lat: destination.lat,
                   lng: destination.lng,
                   label: destination.city
-                } : undefined} showRoute={!!origin && !!destination} />
+                } : undefined} incidents={trafficIncidents} showRoute={!!origin && !!destination} />
                     {/* AI Advisor Popup */}
                     {quoteStep === 'eta' && eta && <AIAdvisor eta={eta} carrierMode={selectedCarrier} onCarrierChange={carrier => setSelectedCarrier(carrier)} />}
                   </div>

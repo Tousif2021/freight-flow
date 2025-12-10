@@ -119,11 +119,11 @@ serve(async (req) => {
     const avgCongestion = validFlowCount > 0 ? totalCongestion / validFlowCount : 0;
 
     // Process incidents
-    const incidents = incidentsData.incidents || [];
-    const severeIncidents = incidents.filter(
+    const rawIncidents = incidentsData.incidents || [];
+    const severeIncidents = rawIncidents.filter(
       (i) => i.properties?.magnitudeOfDelay >= 3 || i.properties?.iconCategory <= 2
     );
-    const moderateIncidents = incidents.filter(
+    const moderateIncidents = rawIncidents.filter(
       (i) => i.properties?.magnitudeOfDelay === 2 || (i.properties?.iconCategory > 2 && i.properties?.iconCategory <= 5)
     );
 
@@ -149,15 +149,69 @@ serve(async (req) => {
       label = 'Heavy traffic / incidents';
     }
 
+    // Extract incident details with coordinates for map markers
+    const processedIncidents = rawIncidents.slice(0, 10).map((incident: any, index: number) => {
+      // TomTom incidents have geometry.coordinates as [lng, lat] or array of points
+      let lat = midLat;
+      let lng = midLng;
+      
+      if (incident.geometry?.coordinates) {
+        const coords = incident.geometry.coordinates;
+        if (Array.isArray(coords[0])) {
+          // LineString - take first point
+          lng = coords[0][0];
+          lat = coords[0][1];
+        } else {
+          // Point
+          lng = coords[0];
+          lat = coords[1];
+        }
+      }
+
+      const severity = incident.properties?.magnitudeOfDelay >= 3 || incident.properties?.iconCategory <= 2
+        ? 'severe'
+        : incident.properties?.magnitudeOfDelay === 2 || incident.properties?.iconCategory <= 5
+          ? 'moderate'
+          : 'minor';
+
+      const typeMap: Record<number, string> = {
+        1: 'accident',
+        2: 'fog',
+        3: 'hazard',
+        4: 'congestion',
+        5: 'construction',
+        6: 'lane_closure',
+        7: 'road_closure',
+        8: 'road_works',
+        9: 'wind',
+        10: 'flooding',
+        11: 'detour',
+        14: 'broken_down_vehicle',
+      };
+
+      return {
+        id: `incident-${index}`,
+        lat,
+        lng,
+        type: typeMap[incident.properties?.iconCategory] || 'incident',
+        severity,
+        description: incident.properties?.events?.[0]?.description || 'Traffic incident',
+        delay: incident.properties?.delay || 0,
+        from: incident.properties?.from || '',
+        to: incident.properties?.to || '',
+      };
+    });
+
     const result = {
       trafficScore: Math.round(trafficScore),
       status,
       label,
       avgCongestionPercent: Math.round(avgCongestion * 100),
-      incidentCount: incidents.length,
+      incidentCount: rawIncidents.length,
       severeIncidentCount: severeIncidents.length,
       hasRoadClosure,
       flowDataPoints: validFlowCount,
+      incidents: processedIncidents,
     };
 
     console.log('Traffic result:', result);
