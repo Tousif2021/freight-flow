@@ -260,7 +260,7 @@ const Index = () => {
                           <Button variant="ghost" size="sm" onClick={() => setQuoteStep('locations')} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Edit Route
                           </Button>
-                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ''} destinationCity={destination?.city || ''} />
+                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ''} destinationCity={destination?.city || ''} originLat={origin?.lat} originLng={origin?.lng} destLat={destination?.lat} destLng={destination?.lng} />
                           <Button variant="hero" className="w-full mt-4" onClick={() => setQuoteStep('checkout')}>
                             Proceed to Checkout
                           </Button>
