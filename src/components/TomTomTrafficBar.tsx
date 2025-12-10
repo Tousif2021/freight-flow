@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Loader2, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -9,10 +9,14 @@ interface TomTomTrafficBarProps {
   originLng: number;
   destLat: number;
   destLng: number;
+  originCity?: string;
+  destinationCity?: string;
+  trafficData?: TrafficData | null;
+  onTrafficDataChange?: (data: TrafficData | null) => void;
   className?: string;
 }
 
-interface TrafficData {
+export interface TrafficData {
   trafficScore: number;
   status: "green" | "yellow" | "red";
   label: string;
@@ -26,34 +30,74 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
   originLng,
   destLat,
   destLng,
+  originCity,
+  destinationCity,
+  trafficData: externalTrafficData,
+  onTrafficDataChange,
   className,
 }) => {
-  const [trafficData, setTrafficData] = useState<TrafficData | null>(null);
+  const [internalTrafficData, setInternalTrafficData] = useState<TrafficData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [secondsAgo, setSecondsAgo] = useState(0);
 
+  // Use external data if provided, otherwise use internal
+  const trafficData = externalTrafficData !== undefined ? externalTrafficData : internalTrafficData;
+
+  const fetchTraffic = useCallback(async () => {
+    if (externalTrafficData !== undefined) return; // Skip if data is managed externally
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("get-traffic", {
+        body: { originLat, originLng, destLat, destLng },
+      });
+
+      if (fnError) throw fnError;
+      setInternalTrafficData(data);
+      setLastUpdated(new Date());
+      setSecondsAgo(0);
+      onTrafficDataChange?.(data);
+    } catch (err) {
+      console.error("Traffic fetch error:", err);
+      setError("Unable to fetch traffic data");
+      onTrafficDataChange?.(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [originLat, originLng, destLat, destLng, externalTrafficData, onTrafficDataChange]);
+
+  // Initial fetch and auto-refresh every 60s
   useEffect(() => {
-    const fetchTraffic = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data, error: fnError } = await supabase.functions.invoke("get-traffic", {
-          body: { originLat, originLng, destLat, destLng },
-        });
-
-        if (fnError) throw fnError;
-        setTrafficData(data);
-      } catch (err) {
-        console.error("Traffic fetch error:", err);
-        setError("Unable to fetch traffic data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTraffic();
-  }, [originLat, originLng, destLat, destLng]);
+    const refreshInterval = setInterval(fetchTraffic, 60000);
+    return () => clearInterval(refreshInterval);
+  }, [fetchTraffic]);
+
+  // Update seconds ago counter
+  useEffect(() => {
+    if (!lastUpdated) return;
+    
+    const timer = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lastUpdated]);
+
+  // Handle external data updates
+  useEffect(() => {
+    if (externalTrafficData !== undefined) {
+      setLoading(false);
+      if (externalTrafficData) {
+        setLastUpdated(new Date());
+        setSecondsAgo(0);
+      }
+    }
+  }, [externalTrafficData]);
 
   // Gradient stops based on traffic score
   const getGradientStyle = () => {
@@ -61,7 +105,6 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
     
     const score = trafficData.trafficScore;
     
-    // Smooth gradient from green → yellow → red based on score
     if (score <= 20) {
       return { background: "linear-gradient(90deg, hsl(152, 69%, 31%) 0%, hsl(152, 69%, 41%) 100%)" };
     } else if (score <= 35) {
@@ -75,7 +118,13 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
     }
   };
 
-  if (loading) {
+  const formatSecondsAgo = () => {
+    if (secondsAgo < 60) return `${secondsAgo}s ago`;
+    const minutes = Math.floor(secondsAgo / 60);
+    return `${minutes}m ago`;
+  };
+
+  if (loading && !trafficData) {
     return (
       <div className={cn("flex items-center gap-2 px-3 py-2", className)}>
         <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
@@ -92,6 +141,8 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
       </div>
     );
   }
+
+  const showShimmer = trafficData.status !== "green";
 
   return (
     <div className={cn("px-3 py-2", className)}>
@@ -110,6 +161,17 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
           <span className="text-[10px] font-semibold text-foreground">
             Route Traffic
           </span>
+          {/* Live Indicator */}
+          <div className="flex items-center gap-1 ml-1">
+            <motion.div
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-1.5 h-1.5 rounded-full bg-teal"
+            />
+            <span className="text-[8px] text-muted-foreground">
+              Updated {formatSecondsAgo()}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {trafficData.incidentCount > 0 && (
@@ -140,13 +202,27 @@ const TomTomTrafficBar: React.FC<TomTomTrafficBarProps> = ({
           animate={{ scaleX: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         />
-        {/* Animated shimmer overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          animate={{ x: ["-100%", "100%"] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        />
+        {/* Slow shimmer overlay - only when not green */}
+        {showShimmer && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          />
+        )}
       </div>
+
+      {/* Origin/Destination Labels below bar */}
+      {(originCity || destinationCity) && (
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-[8px] text-muted-foreground truncate max-w-[40%]">
+            {originCity || "Origin"}
+          </span>
+          <span className="text-[8px] text-muted-foreground truncate max-w-[40%] text-right">
+            {destinationCity || "Destination"}
+          </span>
+        </div>
+      )}
 
       {trafficData.hasRoadClosure && (
         <motion.div

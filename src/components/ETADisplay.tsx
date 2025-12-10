@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -18,9 +18,10 @@ import {
 } from "lucide-react";
 import { ETAPrediction } from "@/types/shipment";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import LivePulseIndicator from "./LivePulseIndicator";
 import RouteTrafficBar from "./RouteTrafficBar";
-import TomTomTrafficBar from "./TomTomTrafficBar";
+import TomTomTrafficBar, { TrafficData } from "./TomTomTrafficBar";
 
 interface ETADisplayProps {
   eta: ETAPrediction;
@@ -32,11 +33,37 @@ interface ETADisplayProps {
   destLat?: number;
   destLng?: number;
 }
+
 const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity, destinationCity, originLat, originLng, destLat, destLng }) => {
   const [trafficStatus, setTrafficStatus] = useState<"loading" | "done">("loading");
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "done">("loading");
   const [trafficProgress, setTrafficProgress] = useState(0);
   const [weatherProgress, setWeatherProgress] = useState(0);
+  const [liveTrafficData, setLiveTrafficData] = useState<TrafficData | null>(null);
+
+  // Fetch live traffic data from TomTom
+  const fetchTrafficData = useCallback(async () => {
+    if (!originLat || !originLng || !destLat || !destLng) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("get-traffic", {
+        body: { originLat, originLng, destLat, destLng },
+      });
+      if (!error && data) {
+        setLiveTrafficData(data);
+      }
+    } catch (err) {
+      console.error("Traffic fetch error:", err);
+    }
+  }, [originLat, originLng, destLat, destLng]);
+
+  // Fetch traffic data on mount and set up refresh
+  useEffect(() => {
+    fetchTrafficData();
+    const refreshInterval = setInterval(fetchTrafficData, 60000);
+    return () => clearInterval(refreshInterval);
+  }, [fetchTrafficData]);
+
   useEffect(() => {
     setTrafficStatus("loading");
     setWeatherStatus("loading");
@@ -67,6 +94,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
       clearInterval(weatherInterval);
     };
   }, [eta]);
+
   const formatTime = (date: Date) =>
     new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
@@ -92,6 +120,29 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
     (f) => f.name.toLowerCase().includes("day") || f.name.toLowerCase().includes("week"),
   );
   const weatherFactor = eta.factors.find((f) => f.name.toLowerCase().includes("weather"));
+
+  // Dynamic traffic impact based on live TomTom data
+  const getTrafficImpactLevel = () => {
+    if (!liveTrafficData) return { level: "moderate", color: "amber" };
+    switch (liveTrafficData.status) {
+      case "green": return { level: "low", color: "teal" };
+      case "yellow": return { level: "moderate", color: "amber" };
+      case "red": return { level: "high", color: "red" };
+      default: return { level: "moderate", color: "amber" };
+    }
+  };
+
+  const getTrafficDescription = () => {
+    if (!liveTrafficData) return `Traffic conditions to ${destinationCity}`;
+    switch (liveTrafficData.status) {
+      case "green": return `Light traffic on route to ${destinationCity}`;
+      case "yellow": return `Moderate congestion approaching ${destinationCity}`;
+      case "red": return `Heavy traffic / delays near ${destinationCity}`;
+      default: return `Traffic conditions to ${destinationCity}`;
+    }
+  };
+
+  const trafficImpact = getTrafficImpactLevel();
 
   // Card hover animation variants
   const cardHoverVariants = {
@@ -343,6 +394,10 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
               originLng={originLng}
               destLat={destLat}
               destLng={destLng}
+              originCity={originCity}
+              destinationCity={destinationCity}
+              trafficData={liveTrafficData}
+              onTrafficDataChange={setLiveTrafficData}
               className="mt-3 border-t border-border/30 pt-2"
             />
           )}
@@ -429,7 +484,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
             </motion.div>
           )}
 
-          {/* Traffic Conditions Card - with live feed indicator */}
+          {/* Traffic Conditions Card - Dynamic based on TomTom data */}
           {trafficFactor && (
             <motion.div
               initial={{
@@ -445,32 +500,64 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
               transition={{
                 delay: 0.1,
               }}
-              className="relative rounded-lg p-3 border bg-slate-800/50 border-red-500/30 cursor-pointer group"
+              className={cn(
+                "relative rounded-lg p-3 border cursor-pointer group",
+                trafficImpact.color === "teal" && "bg-teal/10 border-teal/30",
+                trafficImpact.color === "amber" && "bg-slate-800/50 border-amber/30",
+                trafficImpact.color === "red" && "bg-slate-800/50 border-red-500/30"
+              )}
             >
-              <motion.div className="absolute inset-0 bg-red-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <motion.div 
+                className={cn(
+                  "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                  trafficImpact.color === "teal" && "bg-teal/5",
+                  trafficImpact.color === "amber" && "bg-amber/5",
+                  trafficImpact.color === "red" && "bg-red-500/5"
+                )} 
+              />
               <div className="relative flex items-center gap-2">
                 <motion.div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/20"
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    trafficImpact.color === "teal" && "bg-teal/20",
+                    trafficImpact.color === "amber" && "bg-amber/20",
+                    trafficImpact.color === "red" && "bg-red-500/20"
+                  )}
                   variants={iconHoverVariants}
-                  animate={{
+                  animate={trafficImpact.color === "red" ? {
                     boxShadow: [
                       "0 0 0 0 rgba(239,68,68,0.3)",
                       "0 0 0 6px rgba(239,68,68,0)",
                       "0 0 0 0 rgba(239,68,68,0)",
                     ],
-                  }}
+                  } : {}}
                   transition={{
                     duration: 1.5,
                     repeat: Infinity,
                   }}
                 >
-                  <Route className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                  <Route className={cn(
+                    "w-4 h-4 group-hover:scale-110 transition-transform",
+                    trafficImpact.color === "teal" && "text-teal",
+                    trafficImpact.color === "amber" && "text-amber",
+                    trafficImpact.color === "red" && "text-red-400"
+                  )} />
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[11px] font-bold text-red-400">Traffic</span>
-                    <span className="px-1.5 py-0.5 bg-red-500/30 text-red-300 text-[8px] font-black uppercase rounded">
-                      HIGH IMPACT
+                    <span className={cn(
+                      "text-[11px] font-bold",
+                      trafficImpact.color === "teal" && "text-teal",
+                      trafficImpact.color === "amber" && "text-amber",
+                      trafficImpact.color === "red" && "text-red-400"
+                    )}>Traffic</span>
+                    <span className={cn(
+                      "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
+                      trafficImpact.color === "teal" && "bg-teal/30 text-teal",
+                      trafficImpact.color === "amber" && "bg-amber/30 text-amber",
+                      trafficImpact.color === "red" && "bg-red-500/30 text-red-300"
+                    )}>
+                      {trafficImpact.level === "low" ? "LOW IMPACT" : trafficImpact.level === "moderate" ? "MODERATE" : "HIGH IMPACT"}
                     </span>
                     {/* Live Feed Indicator */}
                     <div className="flex items-center gap-1 ml-1">
@@ -484,17 +571,37 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                           repeat: Infinity,
                         }}
                       >
-                        <Radio className="w-2.5 h-2.5 text-red-400" />
+                        <Radio className={cn(
+                          "w-2.5 h-2.5",
+                          trafficImpact.color === "teal" && "text-teal",
+                          trafficImpact.color === "amber" && "text-amber",
+                          trafficImpact.color === "red" && "text-red-400"
+                        )} />
                       </motion.div>
-                      <span className="text-[7px] text-red-400/70 uppercase font-semibold">Live</span>
+                      <span className={cn(
+                        "text-[7px] uppercase font-semibold",
+                        trafficImpact.color === "teal" && "text-teal/70",
+                        trafficImpact.color === "amber" && "text-amber/70",
+                        trafficImpact.color === "red" && "text-red-400/70"
+                      )}>Live</span>
                     </div>
                   </div>
-                  <p className="text-[9px] text-red-300/70">Evening congestion forecast at NYC entry window</p>
-                  {/* Mini timeline bar */}
+                  <p className={cn(
+                    "text-[9px]",
+                    trafficImpact.color === "teal" && "text-teal/70",
+                    trafficImpact.color === "amber" && "text-amber/70",
+                    trafficImpact.color === "red" && "text-red-300/70"
+                  )}>{getTrafficDescription()}</p>
+                  {/* Mini timeline bar with destination marker */}
                   <div className="flex items-center gap-0.5 mt-2">
                     <div className="flex-1 h-0.5 bg-muted/30 rounded-full relative">
                       <motion.div
-                        className="absolute right-1/4 -top-1.5 w-1.5 h-1.5 bg-red-400 rounded-full"
+                        className={cn(
+                          "absolute right-1/4 -top-1.5 w-1.5 h-1.5 rounded-full",
+                          trafficImpact.color === "teal" && "bg-teal",
+                          trafficImpact.color === "amber" && "bg-amber",
+                          trafficImpact.color === "red" && "bg-red-400"
+                        )}
                         animate={{
                           scale: [1, 1.3, 1],
                         }}
@@ -503,20 +610,42 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                           repeat: Infinity,
                         }}
                       />
-                      <span className="absolute right-1/4 -top-5 text-[7px] text-red-400 font-semibold transform -translate-x-1/2">
-                        NYC
+                      <span className={cn(
+                        "absolute right-1/4 -top-5 text-[7px] font-semibold transform -translate-x-1/2",
+                        trafficImpact.color === "teal" && "text-teal",
+                        trafficImpact.color === "amber" && "text-amber",
+                        trafficImpact.color === "red" && "text-red-400"
+                      )}>
+                        {destinationCity.split(",")[0]}
                       </span>
                     </div>
                   </div>
                 </div>
                 <motion.div
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 group-hover:bg-red-500/30 transition-colors"
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded transition-colors",
+                    trafficImpact.color === "teal" && "bg-teal/20 group-hover:bg-teal/30",
+                    trafficImpact.color === "amber" && "bg-amber/20 group-hover:bg-amber/30",
+                    trafficImpact.color === "red" && "bg-red-500/20 group-hover:bg-red-500/30"
+                  )}
                   whileHover={{
                     scale: 1.05,
                   }}
                 >
-                  <Route className="w-3 h-3 text-red-400" />
-                  <span className="text-[10px] font-black text-red-400">+{trafficFactor.adjustment.toFixed(1)}h</span>
+                  <Route className={cn(
+                    "w-3 h-3",
+                    trafficImpact.color === "teal" && "text-teal",
+                    trafficImpact.color === "amber" && "text-amber",
+                    trafficImpact.color === "red" && "text-red-400"
+                  )} />
+                  <span className={cn(
+                    "text-[10px] font-black",
+                    trafficImpact.color === "teal" && "text-teal",
+                    trafficImpact.color === "amber" && "text-amber",
+                    trafficImpact.color === "red" && "text-red-400"
+                  )}>
+                    {trafficImpact.level === "low" ? "± 0.0h" : `+${trafficFactor.adjustment.toFixed(1)}h`}
+                  </span>
                 </motion.div>
               </div>
             </motion.div>
