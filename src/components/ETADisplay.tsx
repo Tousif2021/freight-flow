@@ -1135,7 +1135,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
             <div className="flex items-center gap-1.5">
               <Shield className="w-3 h-3" />
               <span>
-                Model confidence: <span className="font-bold text-foreground">94%</span>
+                Model confidence: <span className="font-bold text-foreground">96%</span>
               </span>
             </div>
             <span className="text-[8px] text-muted-foreground/70 mt-0.5 ml-4.5">
