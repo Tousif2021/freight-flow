@@ -64,7 +64,7 @@ const CarrierSelector: React.FC<CarrierSelectorProps> = ({ selectedCarrier, onSe
           <h4 className="text-sm font-medium text-foreground">Carrier Mode</h4>
           <span className="text-xs text-muted-foreground">Select one</span>
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 py-3">
           {CARRIER_OPTIONS.map((option, index) => {
             const Icon = IconMap[option.icon as keyof typeof IconMap];
             const isSelected = selectedCarrier === option.id;
