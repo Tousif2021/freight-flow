@@ -210,7 +210,25 @@ const MapView: React.FC<MapViewProps> = ({
       markersRef.current.push(marker);
     }
 
-    // Fit bounds to show all markers
+    // Fly to origin only
+    if (origin && !destination) {
+      map.current.flyTo({
+        center: [origin.lng, origin.lat],
+        zoom: 10,
+        duration: 1000,
+      });
+    }
+
+    // Fly to destination only
+    if (destination && !origin) {
+      map.current.flyTo({
+        center: [destination.lng, destination.lat],
+        zoom: 10,
+        duration: 1000,
+      });
+    }
+
+    // Fit bounds to show all markers when both are set
     if (origin && destination) {
       const bounds = new mapboxgl.LngLatBounds();
       bounds.extend([origin.lng, origin.lat]);
