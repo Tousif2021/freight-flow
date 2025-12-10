@@ -521,71 +521,61 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                 delay: 0.05,
               }}
               className={cn(
-                "relative rounded-lg p-3 border cursor-pointer group",
+                "relative rounded-lg p-3 border-2 cursor-pointer group",
                 carrierFactor.adjustment === 0 
-                  ? "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]"
-                  : "bg-slate-700/50 border-red-500/30"
+                  ? "bg-teal/10 border-teal/60"
+                  : carrierFactor.adjustment <= 3.0
+                    ? "bg-amber/10 border-amber/60"
+                    : "bg-slate-700/50 border-red-500/60"
               )}
             >
               <motion.div className={cn(
                 "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-                carrierFactor.adjustment === 0 ? "bg-teal/5" : "bg-red-500/5"
+                carrierFactor.adjustment === 0 ? "bg-teal/5" : carrierFactor.adjustment <= 3.0 ? "bg-amber/5" : "bg-red-500/5"
               )} />
               <div className="relative flex items-center gap-2">
                 <motion.div
                   className={cn(
                     "w-8 h-8 rounded-lg flex items-center justify-center",
-                    carrierFactor.adjustment === 0 ? "bg-teal/20" : "bg-red-500/20"
+                    carrierFactor.adjustment === 0 ? "bg-teal/20" : carrierFactor.adjustment <= 3.0 ? "bg-amber/20" : "bg-red-500/20"
                   )}
                   variants={iconHoverVariants}
-                  animate={carrierFactor.adjustment !== 0 ? {
-                    boxShadow: [
-                      "0 0 0 0 rgba(239,68,68,0.3)",
-                      "0 0 0 6px rgba(239,68,68,0)",
-                      "0 0 0 0 rgba(239,68,68,0)",
-                    ],
-                  } : {}}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                  }}
                 >
                   <Truck className={cn(
                     "w-4 h-4 group-hover:scale-110 transition-transform",
-                    carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                    carrierFactor.adjustment === 0 ? "text-teal" : carrierFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                   )} />
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className={cn(
                       "text-[11px] font-bold",
-                      carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                      carrierFactor.adjustment === 0 ? "text-teal" : carrierFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                     )}>Carrier Mode</span>
                     <span className={cn(
                       "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
                       carrierFactor.adjustment === 0 
                         ? "bg-teal/30 text-teal" 
-                        : "bg-red-500/30 text-red-300"
+                        : carrierFactor.adjustment <= 3.0
+                          ? "bg-amber/30 text-amber"
+                          : "bg-red-500/30 text-red-300"
                     )}>
-                      {carrierFactor.adjustment === 0 ? "NO IMPACT" : "HIGH IMPACT"}
+                      {carrierFactor.adjustment === 0 ? "NO IMPACT" : carrierFactor.adjustment <= 3.0 ? "MODERATE" : "HIGH IMPACT"}
                     </span>
                   </div>
                   <p className={cn(
                     "text-[9px]",
-                    carrierFactor.adjustment === 0 ? "text-teal/70" : "text-red-300/70"
-                  )}>{carrierFactor.description}</p>
-                  {carrierFactor.adjustment !== 0 && (
-                    <p className="text-[9px] text-amber/80 font-medium mt-1">
-                      💡 AI suggests direct truckload to save ~9–11h
-                    </p>
-                  )}
+                    carrierFactor.adjustment === 0 ? "text-teal/70" : carrierFactor.adjustment <= 3.0 ? "text-amber/70" : "text-red-300/70"
+                  )}>{carrierFactor.adjustment === 0 ? "No measurable impact on transit time" : carrierFactor.description}</p>
                 </div>
                 <motion.div
                   className={cn(
                     "flex items-center gap-1 px-2 py-1 rounded transition-colors",
                     carrierFactor.adjustment === 0 
                       ? "bg-teal/20 group-hover:bg-teal/30" 
-                      : "bg-red-500/20 group-hover:bg-red-500/30"
+                      : carrierFactor.adjustment <= 3.0
+                        ? "bg-amber/20 group-hover:bg-amber/30"
+                        : "bg-red-500/20 group-hover:bg-red-500/30"
                   )}
                   whileHover={{
                     scale: 1.05,
@@ -594,14 +584,11 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                   {carrierFactor.adjustment === 0 ? (
                     <Check className="w-3 h-3 text-teal" />
                   ) : (
-                    <>
-                      <Truck className="w-3 h-3 text-red-400" />
-                      <Clock className="w-2.5 h-2.5 text-red-400" />
-                    </>
+                    <Truck className={cn("w-3 h-3", carrierFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400")} />
                   )}
                   <span className={cn(
                     "text-[10px] font-black",
-                    carrierFactor.adjustment === 0 ? "text-teal" : "text-red-400"
+                    carrierFactor.adjustment === 0 ? "text-teal" : carrierFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                   )}>
                     {carrierFactor.adjustment === 0 ? "± 0.0h" : `+${carrierFactor.adjustment.toFixed(1)}h`}
                   </span>
@@ -627,10 +614,10 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                 delay: 0.1,
               }}
               className={cn(
-                "relative rounded-lg p-3 border cursor-pointer group",
-                trafficImpact.color === "teal" && "bg-teal/10 border-teal/30",
-                trafficImpact.color === "amber" && "bg-slate-800/50 border-amber/30",
-                trafficImpact.color === "red" && "bg-slate-800/50 border-red-500/30"
+                "relative rounded-lg p-3 border-2 cursor-pointer group",
+                trafficImpact.color === "teal" && "bg-teal/10 border-teal/60",
+                trafficImpact.color === "amber" && "bg-amber/10 border-amber/60",
+                trafficImpact.color === "red" && "bg-slate-800/50 border-red-500/60"
               )}
             >
               <motion.div 
@@ -794,52 +781,58 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                 delay: 0.15,
               }}
               className={cn(
-                "relative rounded-lg p-3 border cursor-pointer group",
+                "relative rounded-lg p-3 border-2 cursor-pointer group",
                 dayFactor.adjustment === 0 
-                  ? "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]"
-                  : "bg-amber/10 border-amber/30"
+                  ? "bg-teal/10 border-teal/60"
+                  : dayFactor.adjustment <= 3.0
+                    ? "bg-amber/10 border-amber/60"
+                    : "bg-slate-700/50 border-red-500/60"
               )}
             >
               <motion.div className={cn(
                 "absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-                dayFactor.adjustment === 0 ? "bg-teal/5" : "bg-amber/5"
+                dayFactor.adjustment === 0 ? "bg-teal/5" : dayFactor.adjustment <= 3.0 ? "bg-amber/5" : "bg-red-500/5"
               )} />
               <div className="relative flex items-center gap-2">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center",
-                  dayFactor.adjustment === 0 ? "bg-teal/20" : "bg-amber/20"
+                  dayFactor.adjustment === 0 ? "bg-teal/20" : dayFactor.adjustment <= 3.0 ? "bg-amber/20" : "bg-red-500/20"
                 )}>
                   <Calendar className={cn(
                     "w-4 h-4 group-hover:scale-110 transition-transform",
-                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                    dayFactor.adjustment === 0 ? "text-teal" : dayFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                   )} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className={cn(
                       "text-[11px] font-bold",
-                      dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                      dayFactor.adjustment === 0 ? "text-teal" : dayFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                     )}>Day of Week</span>
                     <span className={cn(
                       "px-1.5 py-0.5 text-[8px] font-black uppercase rounded",
                       dayFactor.adjustment === 0 
                         ? "bg-teal/30 text-teal" 
-                        : "bg-amber/30 text-amber"
+                        : dayFactor.adjustment <= 3.0
+                          ? "bg-amber/30 text-amber"
+                          : "bg-red-500/30 text-red-300"
                     )}>
-                      {dayFactor.adjustment === 0 ? "NO IMPACT" : "MODERATE"}
+                      {dayFactor.adjustment === 0 ? "NO IMPACT" : dayFactor.adjustment <= 3.0 ? "MODERATE" : "HIGH IMPACT"}
                     </span>
                   </div>
                   <p className={cn(
                     "text-[9px]",
-                    dayFactor.adjustment === 0 ? "text-teal/70" : "text-amber/70"
-                  )}>{dayFactor.description}</p>
+                    dayFactor.adjustment === 0 ? "text-teal/70" : dayFactor.adjustment <= 3.0 ? "text-amber/70" : "text-red-300/70"
+                  )}>{dayFactor.adjustment === 0 ? "Conditions stable" : dayFactor.description}</p>
                 </div>
                 <motion.div
                   className={cn(
                     "flex items-center gap-1 px-2 py-1 rounded transition-colors",
                     dayFactor.adjustment === 0 
                       ? "bg-teal/20 group-hover:bg-teal/30" 
-                      : "bg-amber/20 group-hover:bg-amber/30"
+                      : dayFactor.adjustment <= 3.0
+                        ? "bg-amber/20 group-hover:bg-amber/30"
+                        : "bg-red-500/20 group-hover:bg-red-500/30"
                   )}
                   whileHover={{
                     scale: 1.05,
@@ -847,11 +840,11 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                 >
                   <Check className={cn(
                     "w-3 h-3",
-                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                    dayFactor.adjustment === 0 ? "text-teal" : dayFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                   )} />
                   <span className={cn(
                     "text-[10px] font-black",
-                    dayFactor.adjustment === 0 ? "text-teal" : "text-amber"
+                    dayFactor.adjustment === 0 ? "text-teal" : dayFactor.adjustment <= 3.0 ? "text-amber" : "text-red-400"
                   )}>
                     {dayFactor.adjustment === 0 ? "± 0.0h" : `+${dayFactor.adjustment.toFixed(1)}h`}
                   </span>
@@ -877,10 +870,10 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
                 delay: 0.2,
               }}
               className={cn(
-                "relative rounded-lg p-3 border overflow-hidden cursor-pointer group",
-                weatherImpact.color === "teal" && "bg-teal/10 border-teal/50 shadow-[0_0_12px_rgba(20,184,166,0.3)]",
-                weatherImpact.color === "amber" && "bg-slate-700/50 border-amber/30",
-                weatherImpact.color === "red" && "bg-slate-700/50 border-red-500/30"
+                "relative rounded-lg p-3 border-2 overflow-hidden cursor-pointer group",
+                weatherImpact.color === "teal" && "bg-teal/10 border-teal/60",
+                weatherImpact.color === "amber" && "bg-amber/10 border-amber/60",
+                weatherImpact.color === "red" && "bg-slate-700/50 border-red-500/60"
               )}
             >
               {/* Subtle diagonal grain overlay */}

@@ -224,7 +224,7 @@ const MapView: React.FC<MapViewProps> = ({
         duration: 1000,
       });
     }
-  }, [incidents, isLoaded, clearIncidentMarkers]);
+  }, [origin, destination, currentLocation, isLoaded, clearMarkers]);
 
   // Add incident markers
   useEffect(() => {
