@@ -73,7 +73,7 @@ const CarrierSelector: React.FC<CarrierSelectorProps> = ({ selectedCarrier, onSe
               <motion.button
                 key={option.id}
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: isSelected ? 1.05 : 1 }}
                 transition={{ delay: index * 0.05, duration: 0.2 }}
                 onClick={() => onSelect(option.id)}
                 className={cn(
@@ -136,7 +136,7 @@ const CarrierSelector: React.FC<CarrierSelectorProps> = ({ selectedCarrier, onSe
               key={option.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.3 }}
+              transition={{ delay: index * 0.08, duration: 0.3, ease: "easeOut" }}
               onClick={() => onSelect(option.id)}
               className={cn(
                 "relative p-4 rounded-xl border-2 text-left transition-all duration-300",
