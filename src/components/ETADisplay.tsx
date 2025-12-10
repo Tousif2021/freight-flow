@@ -835,7 +835,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({
                       trafficImpact.color === "red" && "text-red-400",
                     )}
                   >
-                    {trafficDelayHours === 0 ? "± 0.0h" : `+${trafficDelayHours.toFixed(1)}h`}
+                    {trafficDelayHours === 0 ? "±  0.0h" : `+${trafficDelayHours.toFixed(1)}h`}
                   </span>
                 </motion.div>
               </div>
