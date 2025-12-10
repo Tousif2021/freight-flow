@@ -20,13 +20,19 @@ import { ETAPrediction } from "@/types/shipment";
 import { cn } from "@/lib/utils";
 import LivePulseIndicator from "./LivePulseIndicator";
 import RouteTrafficBar from "./RouteTrafficBar";
+import TomTomTrafficBar from "./TomTomTrafficBar";
+
 interface ETADisplayProps {
   eta: ETAPrediction;
   distanceMiles: number;
   originCity: string;
   destinationCity: string;
+  originLat?: number;
+  originLng?: number;
+  destLat?: number;
+  destLng?: number;
 }
-const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity, destinationCity }) => {
+const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity, destinationCity, originLat, originLng, destLat, destLng }) => {
   const [trafficStatus, setTrafficStatus] = useState<"loading" | "done">("loading");
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "done">("loading");
   const [trafficProgress, setTrafficProgress] = useState(0);
@@ -330,7 +336,16 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
             </div>
           </div>
 
-          {/* Segmented Route Traffic Bar */}
+          {/* TomTom Traffic Visibility Bar */}
+          {originLat && originLng && destLat && destLng && (
+            <TomTomTrafficBar
+              originLat={originLat}
+              originLng={originLng}
+              destLat={destLat}
+              destLng={destLng}
+              className="mt-3 border-t border-border/30 pt-2"
+            />
+          )}
         </div>
       </div>
 
