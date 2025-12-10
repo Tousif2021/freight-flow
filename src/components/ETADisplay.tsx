@@ -224,7 +224,7 @@ const ETADisplay: React.FC<ETADisplayProps> = ({ eta, distanceMiles, originCity,
       </AnimatePresence>
 
       {/* Hero ETA Card */}
-      <div className="glass-card overflow-hidden relative">
+      <div className="glass-card overflow-visible relative">
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5"
           animate={{
