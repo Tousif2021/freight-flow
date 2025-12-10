@@ -294,7 +294,7 @@ const Index = () => {
                   lat: destination.lat,
                   lng: destination.lng,
                   label: destination.city
-                } : undefined} showRoute={!!origin && !!destination && !!selectedCarrier} />
+                } : undefined} showRoute={!!origin && !!destination} />
                     {/* AI Advisor Popup */}
                     {quoteStep === 'eta' && eta && <AIAdvisor eta={eta} carrierMode={selectedCarrier} onCarrierChange={carrier => setSelectedCarrier(carrier)} />}
                   </div>
