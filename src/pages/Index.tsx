@@ -17,6 +17,7 @@ import { calculateETA, calculateDistance, estimateBaseDuration } from "@/lib/eta
 import { api, mockStats, mockShipments } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { TrafficIncident } from "@/components/MapView";
+import { Link, CloudCheck, Server, Network } from "lucide-react";
 
 type View = "dashboard" | "quote" | "tracking";
 type QuoteStep = "locations" | "carrier" | "eta" | "checkout";
@@ -196,9 +197,9 @@ const Index = () => {
             </div>
 
             {/* API Services Online */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue/10 rounded-full border border-blue/30">
-              <Wifi className="w-3 h-3 rounded-full bg-blue animate-pulse" />
-              <span className="text-[10px] font-semibold text-blue uppercase tracking-wide">API Connected</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 rounded-full border border-blue-500/30">
+              <Link className="w-3 h-3 text-blue-500 animate-pulse" />
+              <span className="text-[10px] font-semibold text-blue-500 uppercase tracking-wide">API Connected</span>
             </div>
           </div>
 
