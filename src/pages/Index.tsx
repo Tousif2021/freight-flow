@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Plus, Truck, ArrowLeft, Menu, X, Clock, Radio, Wifi } from "lucide-react";
+import { LayoutDashboard, Plus, ArrowLeft, Menu, X, Clock, Radio, Wifi, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MapView from "@/components/MapView";
 import AddressInput from "@/components/AddressInput";
@@ -17,7 +17,7 @@ import { calculateETA, calculateDistance, estimateBaseDuration } from "@/lib/eta
 import { api, mockStats, mockShipments } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { TrafficIncident } from "@/components/MapView";
-import { Link, CloudCheck, Server, Network } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 type View = "dashboard" | "quote" | "tracking";
 type QuoteStep = "locations" | "carrier" | "eta" | "checkout";
@@ -168,10 +168,8 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-glow">
-              <Truck className="w-5 h-5 text-primary-foreground" />
-            </div>
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="FreightFlow" className="h-10 w-auto" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">FreightFlow</h1>
               <p className="text-xs font-medium text-muted-foreground hidden sm:block tracking-wide uppercase">
