@@ -18,10 +18,8 @@ import { api, mockStats, mockShipments } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { TrafficIncident } from "@/components/MapView";
 import logo from "@/assets/logo.png";
-
 type View = "dashboard" | "quote" | "tracking";
 type QuoteStep = "locations" | "carrier" | "eta" | "checkout";
-
 const Index = () => {
   const [view, setView] = useState<View>("dashboard");
   const [quoteStep, setQuoteStep] = useState<QuoteStep>("locations");
@@ -85,12 +83,12 @@ const Index = () => {
         carrierMode: selectedCarrier,
         sender: {
           name: data.senderName,
-          email: data.senderEmail,
+          email: data.senderEmail
         },
         receiver: {
           name: data.receiverName,
-          email: data.receiverEmail,
-        },
+          email: data.receiverEmail
+        }
       });
       setShipments([newShipment, ...shipments]);
       setNewTrackingNumber(newShipment.trackingNumber);
@@ -104,18 +102,15 @@ const Index = () => {
     setShowSuccess(false);
     setView("tracking");
   };
-  const navItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      id: "quote",
-      label: "New Quote",
-      icon: Plus,
-    },
-  ];
+  const navItems = [{
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard
+  }, {
+    id: "quote",
+    label: "New Quote",
+    icon: Plus
+  }];
   // Handle Calculate ETA click
   const handleCalculateETA = () => {
     if (!origin || !destination || !selectedCarrier) return;
@@ -143,20 +138,17 @@ const Index = () => {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hour12: false,
+      hour12: false
     });
   };
-
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
+      year: "numeric"
     });
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Loading Screen Overlay */}
       <AnimatePresence>{showLoadingScreen && <ETALoadingScreen onComplete={handleLoadingComplete} />}</AnimatePresence>
 
@@ -169,7 +161,7 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="FreightFlow" className="h-10 w-auto" />
+            <img alt="FreightFlow" src="/lovable-uploads/27136723-d33d-47dc-820c-d4c1bb0980ed.png" className="h-10 w-auto object-contain border-0 shadow-sm" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">FreightFlow</h1>
               <p className="text-xs font-medium text-muted-foreground hidden sm:block tracking-wide uppercase">
@@ -187,11 +179,9 @@ const Index = () => {
             </div>
 
             {/* Date & Time */}
-            <div
-              className="flex items-center gap-1.5 px-3 py-1
+            <div className="flex items-center gap-1.5 px-3 py-1
      bg-slate-500/10 border border-white/25 
-     rounded-full"
-            >
+     rounded-full">
               <div className="w-3 h-3 rounded-full bg-white/30 flex items-center justify-center">
                 <Clock className="w-2 h-2 text-white/80" />
               </div>
@@ -210,18 +200,10 @@ const Index = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
-            {navItems.map((item) => (
-              <Button
-                key={item.id}
-                variant={item.id === "quote" ? "hero" : view === item.id ? "default" : "ghost"}
-                size="sm"
-                className={item.id === "quote" ? "border border-primary/30" : ""}
-                onClick={() => (item.id === "quote" ? handleNewQuote() : setView(item.id as View))}
-              >
+            {navItems.map(item => <Button key={item.id} variant={item.id === "quote" ? "hero" : view === item.id ? "default" : "ghost"} size="sm" className={item.id === "quote" ? "border border-primary/30" : ""} onClick={() => item.id === "quote" ? handleNewQuote() : setView(item.id as View)}>
                 <item.icon className="w-4 h-4" />
                 {item.label}
-              </Button>
-            ))}
+              </Button>)}
           </nav>
 
           {/* Mobile Menu Toggle */}
@@ -232,40 +214,26 @@ const Index = () => {
 
         {/* Mobile Nav */}
         <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{
-                opacity: 0,
-                height: 0,
-              }}
-              animate={{
-                opacity: 1,
-                height: "auto",
-              }}
-              exit={{
-                opacity: 0,
-                height: 0,
-              }}
-              className="md:hidden border-t border-border/50 bg-background"
-            >
+          {mobileMenuOpen && <motion.div initial={{
+          opacity: 0,
+          height: 0
+        }} animate={{
+          opacity: 1,
+          height: "auto"
+        }} exit={{
+          opacity: 0,
+          height: 0
+        }} className="md:hidden border-t border-border/50 bg-background">
               <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
-                {navItems.map((item) => (
-                  <Button
-                    key={item.id}
-                    variant={item.id === "quote" ? "hero" : view === item.id ? "default" : "ghost"}
-                    className={cn("justify-start", item.id === "quote" && "border border-primary/30")}
-                    onClick={() => {
-                      item.id === "quote" ? handleNewQuote() : setView(item.id as View);
-                      setMobileMenuOpen(false);
-                    }}
-                  >
+                {navItems.map(item => <Button key={item.id} variant={item.id === "quote" ? "hero" : view === item.id ? "default" : "ghost"} className={cn("justify-start", item.id === "quote" && "border border-primary/30")} onClick={() => {
+              item.id === "quote" ? handleNewQuote() : setView(item.id as View);
+              setMobileMenuOpen(false);
+            }}>
                     <item.icon className="w-4 h-4" />
                     {item.label}
-                  </Button>
-                ))}
+                  </Button>)}
               </div>
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
       </header>
 
@@ -274,56 +242,38 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <AnimatePresence mode="wait">
             {/* Dashboard View */}
-            {view === "dashboard" && (
-              <motion.div
-                key="dashboard"
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -20,
-                }}
-                className="space-y-6"
-              >
+            {view === "dashboard" && <motion.div key="dashboard" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }} className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
                   <p className="text-muted-foreground font-medium">Overview of your shipments</p>
                 </div>
 
-                <DashboardStats
-                  stats={stats}
-                  recentShipments={shipments}
-                  onViewShipment={(shipment) => {
-                    setSelectedShipment(shipment);
-                    setView("tracking");
-                  }}
-                />
-              </motion.div>
-            )}
+                <DashboardStats stats={stats} recentShipments={shipments} onViewShipment={shipment => {
+              setSelectedShipment(shipment);
+              setView("tracking");
+            }} />
+              </motion.div>}
 
             {/* Quote View */}
-            {view === "quote" && (
-              <motion.div
-                key="quote"
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -20,
-                }}
-              >
+            {view === "quote" && <motion.div key="quote" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
                 <Button variant="ghost" size="sm" onClick={() => setView("dashboard")} className="mb-4">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </Button>
@@ -332,229 +282,130 @@ const Index = () => {
                   {/* Left: Form */}
                   <div className="space-y-6">
                     <AnimatePresence mode="wait">
-                      {(quoteStep === "locations" || quoteStep === "carrier") && (
-                        <motion.div
-                          key="quote-entry"
-                          initial={{
-                            opacity: 0,
-                            x: -20,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            x: 0,
-                          }}
-                          exit={{
-                            opacity: 0,
-                            x: -20,
-                          }}
-                          className="glass-card p-6 px-[24px]"
-                        >
+                      {(quoteStep === "locations" || quoteStep === "carrier") && <motion.div key="quote-entry" initial={{
+                    opacity: 0,
+                    x: -20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-6 px-[24px]">
                           <h2 className="text-xl font-bold tracking-tight text-foreground mb-6">Get a Quote</h2>
 
                           <div className="space-y-4 mb-6">
-                            <AddressInput
-                              label="Origin"
-                              placeholder="Enter pickup city (e.g., Los Angeles)"
-                              value={origin}
-                              onChange={setOrigin}
-                              icon="origin"
-                            />
-                            <AddressInput
-                              label="Destination"
-                              placeholder="Enter delivery city (e.g., New York)"
-                              value={destination}
-                              onChange={setDestination}
-                              icon="destination"
-                            />
+                            <AddressInput label="Origin" placeholder="Enter pickup city (e.g., Los Angeles)" value={origin} onChange={setOrigin} icon="origin" />
+                            <AddressInput label="Destination" placeholder="Enter delivery city (e.g., New York)" value={destination} onChange={setDestination} icon="destination" />
                           </div>
 
                           <AnimatePresence>
-                            {origin && destination && (
-                              <motion.div
-                                initial={{
-                                  opacity: 0,
-                                  height: 0,
-                                }}
-                                animate={{
-                                  opacity: 1,
-                                  height: "auto",
-                                }}
-                                exit={{
-                                  opacity: 0,
-                                  height: 0,
-                                }}
-                                transition={{
-                                  duration: 0.3,
-                                }}
-                                className="overflow-hidden"
-                              >
+                            {origin && destination && <motion.div initial={{
+                        opacity: 0,
+                        height: 0
+                      }} animate={{
+                        opacity: 1,
+                        height: "auto"
+                      }} exit={{
+                        opacity: 0,
+                        height: 0
+                      }} transition={{
+                        duration: 0.3
+                      }} className="overflow-hidden">
                                 <div className="pt-4 border-t border-border/30">
-                                  <CarrierSelector
-                                    selectedCarrier={selectedCarrier}
-                                    onSelect={(carrier) => {
-                                      setSelectedCarrier(carrier);
-                                    }}
-                                    compact
-                                  />
+                                  <CarrierSelector selectedCarrier={selectedCarrier} onSelect={carrier => {
+                            setSelectedCarrier(carrier);
+                          }} compact />
 
-                                  {selectedCarrier && (
-                                    <motion.div
-                                      initial={{
-                                        opacity: 0,
-                                        y: 10,
-                                      }}
-                                      animate={{
-                                        opacity: 1,
-                                        y: 0,
-                                      }}
-                                      className="mt-6"
-                                    >
+                                  {selectedCarrier && <motion.div initial={{
+                            opacity: 0,
+                            y: 10
+                          }} animate={{
+                            opacity: 1,
+                            y: 0
+                          }} className="mt-6">
                                       <Button variant="hero" className="w-full" onClick={handleCalculateETA}>
                                         Calculate ETA
                                       </Button>
-                                    </motion.div>
-                                  )}
+                                    </motion.div>}
                                 </div>
-                              </motion.div>
-                            )}
+                              </motion.div>}
                           </AnimatePresence>
-                        </motion.div>
-                      )}
+                        </motion.div>}
 
-                      {quoteStep === "eta" && eta && (
-                        <motion.div
-                          key="quote-eta"
-                          initial={{
-                            opacity: 0,
-                            x: 20,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            x: 0,
-                          }}
-                          exit={{
-                            opacity: 0,
-                            x: -20,
-                          }}
-                          className="glass-card p-4"
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setQuoteStep("locations")}
-                            className="mb-3 -ml-2"
-                          >
+                      {quoteStep === "eta" && eta && <motion.div key="quote-eta" initial={{
+                    opacity: 0,
+                    x: 20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-4">
+                          <Button variant="ghost" size="sm" onClick={() => setQuoteStep("locations")} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Edit Route
                           </Button>
-                          <ETADisplay
-                            eta={eta}
-                            distanceMiles={distanceMiles}
-                            originCity={origin?.city || ""}
-                            destinationCity={destination?.city || ""}
-                            originLat={origin?.lat}
-                            originLng={origin?.lng}
-                            destLat={destination?.lat}
-                            destLng={destination?.lng}
-                            onTrafficIncidents={setTrafficIncidents}
-                          />
+                          <ETADisplay eta={eta} distanceMiles={distanceMiles} originCity={origin?.city || ""} destinationCity={destination?.city || ""} originLat={origin?.lat} originLng={origin?.lng} destLat={destination?.lat} destLng={destination?.lng} onTrafficIncidents={setTrafficIncidents} />
                           <Button variant="hero" className="w-full mt-4" onClick={() => setQuoteStep("checkout")}>
                             Proceed to Checkout
                           </Button>
-                        </motion.div>
-                      )}
+                        </motion.div>}
 
-                      {quoteStep === "checkout" && (
-                        <motion.div
-                          key="quote-checkout"
-                          initial={{
-                            opacity: 0,
-                            x: 20,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            x: 0,
-                          }}
-                          exit={{
-                            opacity: 0,
-                            x: -20,
-                          }}
-                          className="glass-card p-4"
-                        >
+                      {quoteStep === "checkout" && <motion.div key="quote-checkout" initial={{
+                    opacity: 0,
+                    x: 20
+                  }} animate={{
+                    opacity: 1,
+                    x: 0
+                  }} exit={{
+                    opacity: 0,
+                    x: -20
+                  }} className="glass-card p-4">
                           <Button variant="ghost" size="sm" onClick={() => setQuoteStep("eta")} className="mb-3 -ml-2">
                             <ArrowLeft className="w-4 h-4" /> Back to ETA
                           </Button>
                           <CheckoutForm onSubmit={handleCheckout} isLoading={isCreating} />
-                        </motion.div>
-                      )}
+                        </motion.div>}
                     </AnimatePresence>
                   </div>
 
                   {/* Right: Map with AI Advisor */}
                   <div className="h-[350px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24 relative">
-                    <MapView
-                      origin={
-                        origin
-                          ? {
-                              lat: origin.lat,
-                              lng: origin.lng,
-                              label: origin.city,
-                            }
-                          : undefined
-                      }
-                      destination={
-                        destination
-                          ? {
-                              lat: destination.lat,
-                              lng: destination.lng,
-                              label: destination.city,
-                            }
-                          : undefined
-                      }
-                      incidents={trafficIncidents}
-                      showRoute={!!origin && !!destination}
-                      showAlternativeRoute={quoteStep === "eta"}
-                      alternativeRouteReason="Road Closure Ahead"
-                    />
+                    <MapView origin={origin ? {
+                  lat: origin.lat,
+                  lng: origin.lng,
+                  label: origin.city
+                } : undefined} destination={destination ? {
+                  lat: destination.lat,
+                  lng: destination.lng,
+                  label: destination.city
+                } : undefined} incidents={trafficIncidents} showRoute={!!origin && !!destination} showAlternativeRoute={quoteStep === "eta"} alternativeRouteReason="Road Closure Ahead" />
                     {/* AI Advisor Popup */}
-                    {quoteStep === "eta" && eta && (
-                      <AIAdvisor
-                        eta={eta}
-                        carrierMode={selectedCarrier}
-                        onCarrierChange={(carrier) => setSelectedCarrier(carrier)}
-                      />
-                    )}
+                    {quoteStep === "eta" && eta && <AIAdvisor eta={eta} carrierMode={selectedCarrier} onCarrierChange={carrier => setSelectedCarrier(carrier)} />}
                   </div>
                 </div>
-              </motion.div>
-            )}
+              </motion.div>}
 
             {/* Tracking View */}
-            {view === "tracking" && selectedShipment && (
-              <motion.div
-                key="tracking"
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -20,
-                }}
-              >
+            {view === "tracking" && selectedShipment && <motion.div key="tracking" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
                 <Button variant="ghost" size="sm" onClick={() => setView("dashboard")} className="mb-4">
                   <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </Button>
                 <TrackingView shipment={selectedShipment} />
-              </motion.div>
-            )}
+              </motion.div>}
           </AnimatePresence>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
 export default Index;
