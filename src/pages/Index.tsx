@@ -197,7 +197,7 @@ const Index = () => {
             </div>
 
             {/* API Services Online */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 rounded-full border border-blue-500/30">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/40 rounded-full ">
               <Server className="w-3 h-3 text-blue-500 animate-pulse" />
               <span className="text-[10px] font-semibold text-blue-500 uppercase tracking-wide">API Connected</span>
             </div>
