@@ -189,11 +189,15 @@ const Index = () => {
             </div>
 
             {/* Date & Time */}
-            <div className="flex items-center gap-1.5 px-3 py-1 
+            <div
+              className="flex items-center gap-1.5 px-3 py-1 
      bg-slate-500/10 border border-slate-500/30 
-     rounded-full">
+     rounded-full"
+            >
               <div className="w-3 h-3 rounded-full bg-slate-400/40 flex items-center justify-center">
-    <Clock className="w-2 h-2 text-slate-300" />
+                <Clock className="w-2 h-2 text-slate-300" />
+              </div>
+
               <span className="text-[10px] font-semibold text-slate-200 tracking-wide">
                 {formatDate(currentTime)} • {formatTime(currentTime)}
               </span>
