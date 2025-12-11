@@ -11,37 +11,37 @@ const steps = [
     id: "historical",
     label: "Analyzing 70,000+ historical shipment records",
     icon: Database,
-    duration: 750,
+    duration: 950,
   },
   {
     id: "traffic",
     label: "Fetching live TomTom traffic flow & incident data",
     icon: Route,
-    duration: 400,
+    duration: 800,
   },
   {
     id: "weather",
     label: "Retrieving real-time weather conditions",
     icon: CloudRain,
-    duration: 200,
+    duration: 400,
   },
   {
     id: "carrier",
     label: "Evaluating carrier performance & mode impact",
     icon: Truck,
-    duration: 100,
+    duration: 400,
   },
   {
     id: "routing",
     label: "Computing optimal routing & delay probability",
     icon: Brain,
-    duration: 200,
+    duration: 800,
   },
   {
     id: "finalizing",
     label: "Finalizing ETA confidence window & risk score",
     icon: Target,
-    duration: 200,
+    duration: 800,
   },
 ];
 
