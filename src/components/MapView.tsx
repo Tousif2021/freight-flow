@@ -288,38 +288,37 @@ const MapView: React.FC<MapViewProps> = ({
     });
   }, [incidents, isLoaded, clearIncidentMarkers]);
 
-  // Helper to create alternative route marker element (rejected route - red)
+  // Helper to create alternative route marker element (rejected route - red) - positioned BELOW route pointing UP
   const createAlternativeRouteMarker = (reason: string) => {
     const el = document.createElement("div");
     el.className = "flex items-center justify-center";
     el.innerHTML = `
-      <div class="relative">
-        <div class="bg-red-600 backdrop-blur-sm px-3 py-2 rounded-lg shadow-xl border-2 border-red-400 transform -translate-y-3" style="box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 12px rgba(0,0,0,0.4);">
-          <div class="flex items-center gap-2">
-            <span class="text-white text-sm">⛔</span>
-            <span class="text-white text-sm font-bold whitespace-nowrap">${reason}</span>
+      <div class="relative" style="transform: translateY(28px);">
+        <div class="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[10px] border-b-red-600"></div>
+        <div class="bg-red-600/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-xl border border-red-400" style="box-shadow: 0 0 16px rgba(220, 38, 38, 0.5), 0 4px 8px rgba(0,0,0,0.3);">
+          <div class="flex items-center gap-1.5">
+            <span class="text-white text-xs">⛔</span>
+            <span class="text-white text-xs font-semibold whitespace-nowrap">${reason}</span>
           </div>
         </div>
-        <div class="absolute left-1/2 -translate-x-1/2 -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-red-600"></div>
-        <div class="absolute left-1/2 -translate-x-1/2 -bottom-4 w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
       </div>
     `;
     return el;
   };
 
-  // Helper to create optimal route marker element (selected route - yellow)
+  // Helper to create optimal route marker element (selected route - yellow) - positioned BELOW route pointing UP
   const createOptimalRouteMarker = () => {
     const el = document.createElement("div");
     el.className = "flex items-center justify-center";
     el.innerHTML = `
-      <div class="relative">
-        <div class="backdrop-blur-sm px-3 py-2 rounded-lg shadow-xl border-2 transform -translate-y-3" style="background: #FFC72C; border-color: #E5B327; box-shadow: 0 0 20px rgba(255, 199, 44, 0.5), 0 4px 12px rgba(0,0,0,0.3);">
-          <div class="flex items-center gap-2">
-            <span class="text-sm">✓</span>
-            <span class="text-sm font-bold whitespace-nowrap" style="color: #1a1a1a;">Optimised Route</span>
+      <div class="relative" style="transform: translateY(28px);">
+        <div class="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[10px]" style="border-bottom-color: #FFC72C;"></div>
+        <div class="backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-xl border" style="background: #FFC72C; border-color: #E5B327; box-shadow: 0 0 16px rgba(255, 199, 44, 0.5), 0 4px 8px rgba(0,0,0,0.3);">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">✓</span>
+            <span class="text-xs font-semibold whitespace-nowrap" style="color: #1a1a1a;">Optimised Route</span>
           </div>
         </div>
-        <div class="absolute left-1/2 -translate-x-1/2 -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px]" style="border-top-color: #FFC72C;"></div>
       </div>
     `;
     return el;
@@ -404,9 +403,9 @@ const MapView: React.FC<MapViewProps> = ({
               },
             });
 
-            // Add marker at 65% along alternative route (away from optimal marker)
+            // Add marker at 75% along alternative route (near destination, below route)
             const coords = alternativeRoute.coordinates;
-            const altPositionIndex = Math.floor(coords.length * 0.65);
+            const altPositionIndex = Math.floor(coords.length * 0.75);
             const altMarkerPoint = coords[altPositionIndex];
 
             if (altMarkerPoint) {
@@ -415,17 +414,6 @@ const MapView: React.FC<MapViewProps> = ({
                 .setLngLat([altMarkerPoint[0], altMarkerPoint[1]])
                 .addTo(map.current!);
             }
-
-            // Adjust map zoom to show route comparison better
-            const bounds = new mapboxgl.LngLatBounds();
-            bounds.extend([origin.lng, origin.lat]);
-            bounds.extend([destination.lng, destination.lat]);
-            
-            map.current!.fitBounds(bounds, {
-              padding: { top: 100, bottom: 80, left: 80, right: 80 },
-              maxZoom: 7,
-              duration: 1000,
-            });
           }
 
           // Add optimal route source
@@ -466,14 +454,14 @@ const MapView: React.FC<MapViewProps> = ({
             },
             paint: {
               "line-color": "#FFC72C",
-              "line-width": 4,
+              "line-width": 5,
               "line-opacity": 1,
             },
           });
 
-          // Add "Optimised Route" marker at 25% from origin (near start of route)
+          // Add "Optimised Route" marker at 20% from origin (near start, below route)
           const optimalCoords = optimalRoute.coordinates;
-          const optimalPositionIndex = Math.floor(optimalCoords.length * 0.25);
+          const optimalPositionIndex = Math.floor(optimalCoords.length * 0.2);
           const optimalMarkerPoint = optimalCoords[optimalPositionIndex];
 
           if (optimalMarkerPoint && showAlternativeRoute) {
@@ -481,6 +469,18 @@ const MapView: React.FC<MapViewProps> = ({
             optimalRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
               .setLngLat([optimalMarkerPoint[0], optimalMarkerPoint[1]])
               .addTo(map.current!);
+          }
+
+          // Fit bounds to show both routes with good padding when alternative route is shown
+          if (showAlternativeRoute) {
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend([origin.lng, origin.lat]);
+            bounds.extend([destination.lng, destination.lat]);
+            
+            map.current!.fitBounds(bounds, {
+              padding: { top: 80, bottom: 120, left: 60, right: 60 },
+              duration: 1000,
+            });
           }
         }
       } catch (error) {
