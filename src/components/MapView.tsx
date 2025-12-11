@@ -48,6 +48,7 @@ const MapView: React.FC<MapViewProps> = ({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const incidentMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const alternativeRouteMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const optimalRouteMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
@@ -287,19 +288,38 @@ const MapView: React.FC<MapViewProps> = ({
     });
   }, [incidents, isLoaded, clearIncidentMarkers]);
 
-  // Helper to create alternative route marker element
+  // Helper to create alternative route marker element (rejected route - red)
   const createAlternativeRouteMarker = (reason: string) => {
     const el = document.createElement("div");
     el.className = "flex items-center justify-center";
     el.innerHTML = `
       <div class="relative">
-        <div class="bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-red-400/50 transform -translate-y-2">
+        <div class="bg-red-600 backdrop-blur-sm px-3 py-2 rounded-lg shadow-xl border-2 border-red-400 transform -translate-y-3" style="box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 12px rgba(0,0,0,0.4);">
           <div class="flex items-center gap-2">
-            <span class="text-white text-xs">⛔</span>
-            <span class="text-white text-xs font-semibold whitespace-nowrap">${reason}</span>
+            <span class="text-white text-sm">⛔</span>
+            <span class="text-white text-sm font-bold whitespace-nowrap">${reason}</span>
           </div>
         </div>
-        <div class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-red-500/90"></div>
+        <div class="absolute left-1/2 -translate-x-1/2 -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-red-600"></div>
+        <div class="absolute left-1/2 -translate-x-1/2 -bottom-4 w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+      </div>
+    `;
+    return el;
+  };
+
+  // Helper to create optimal route marker element (selected route - yellow)
+  const createOptimalRouteMarker = () => {
+    const el = document.createElement("div");
+    el.className = "flex items-center justify-center";
+    el.innerHTML = `
+      <div class="relative">
+        <div class="backdrop-blur-sm px-3 py-2 rounded-lg shadow-xl border-2 transform -translate-y-3" style="background: #FFC72C; border-color: #E5B327; box-shadow: 0 0 20px rgba(255, 199, 44, 0.5), 0 4px 12px rgba(0,0,0,0.3);">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">✓</span>
+            <span class="text-sm font-bold whitespace-nowrap" style="color: #1a1a1a;">Optimised Route</span>
+          </div>
+        </div>
+        <div class="absolute left-1/2 -translate-x-1/2 -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px]" style="border-top-color: #FFC72C;"></div>
       </div>
     `;
     return el;
@@ -337,6 +357,11 @@ const MapView: React.FC<MapViewProps> = ({
       alternativeRouteMarkerRef.current.remove();
       alternativeRouteMarkerRef.current = null;
     }
+    // Remove optimal route marker
+    if (optimalRouteMarkerRef.current) {
+      optimalRouteMarkerRef.current.remove();
+      optimalRouteMarkerRef.current = null;
+    }
 
     // Fetch route from Mapbox Directions API
     const fetchRoute = async () => {
@@ -362,7 +387,7 @@ const MapView: React.FC<MapViewProps> = ({
               },
             });
 
-            // Alternative route - dashed, gray, faded
+            // Alternative route - dashed, red, faded
             map.current!.addLayer({
               id: altLayerId,
               type: "line",
@@ -372,9 +397,9 @@ const MapView: React.FC<MapViewProps> = ({
                 "line-cap": "round",
               },
               paint: {
-                "line-color": "#9A3412",
-                "line-width": 3,
-                "line-opacity": 0.4,
+                "line-color": "#DC2626",
+                "line-width": 4,
+                "line-opacity": 0.5,
                 "line-dasharray": [2, 2],
               },
             });
@@ -434,6 +459,18 @@ const MapView: React.FC<MapViewProps> = ({
               "line-opacity": 1,
             },
           });
+
+          // Add "Optimised Route" marker at midpoint of optimal route
+          const optimalCoords = optimalRoute.coordinates;
+          const optimalMidIndex = Math.floor(optimalCoords.length / 2);
+          const optimalMidpoint = optimalCoords[optimalMidIndex];
+
+          if (optimalMidpoint && showAlternativeRoute) {
+            const markerEl = createOptimalRouteMarker();
+            optimalRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
+              .setLngLat([optimalMidpoint[0], optimalMidpoint[1]])
+              .addTo(map.current!);
+          }
         }
       } catch (error) {
         console.error("Error fetching route:", error);
