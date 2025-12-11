@@ -404,17 +404,28 @@ const MapView: React.FC<MapViewProps> = ({
               },
             });
 
-            // Add marker at midpoint of alternative route
+            // Add marker at 65% along alternative route (away from optimal marker)
             const coords = alternativeRoute.coordinates;
-            const midIndex = Math.floor(coords.length / 2);
-            const midpoint = coords[midIndex];
+            const altPositionIndex = Math.floor(coords.length * 0.65);
+            const altMarkerPoint = coords[altPositionIndex];
 
-            if (midpoint) {
+            if (altMarkerPoint) {
               const markerEl = createAlternativeRouteMarker(alternativeRouteReason);
               alternativeRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
-                .setLngLat([midpoint[0], midpoint[1]])
+                .setLngLat([altMarkerPoint[0], altMarkerPoint[1]])
                 .addTo(map.current!);
             }
+
+            // Adjust map zoom to show route comparison better
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend([origin.lng, origin.lat]);
+            bounds.extend([destination.lng, destination.lat]);
+            
+            map.current!.fitBounds(bounds, {
+              padding: { top: 100, bottom: 80, left: 80, right: 80 },
+              maxZoom: 7,
+              duration: 1000,
+            });
           }
 
           // Add optimal route source
@@ -460,15 +471,15 @@ const MapView: React.FC<MapViewProps> = ({
             },
           });
 
-          // Add "Optimised Route" marker at midpoint of optimal route
+          // Add "Optimised Route" marker at 25% from origin (near start of route)
           const optimalCoords = optimalRoute.coordinates;
-          const optimalMidIndex = Math.floor(optimalCoords.length / 2);
-          const optimalMidpoint = optimalCoords[optimalMidIndex];
+          const optimalPositionIndex = Math.floor(optimalCoords.length * 0.25);
+          const optimalMarkerPoint = optimalCoords[optimalPositionIndex];
 
-          if (optimalMidpoint && showAlternativeRoute) {
+          if (optimalMarkerPoint && showAlternativeRoute) {
             const markerEl = createOptimalRouteMarker();
             optimalRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
-              .setLngLat([optimalMidpoint[0], optimalMidpoint[1]])
+              .setLngLat([optimalMarkerPoint[0], optimalMarkerPoint[1]])
               .addTo(map.current!);
           }
         }
