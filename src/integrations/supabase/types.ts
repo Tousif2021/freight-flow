@@ -60,6 +60,10 @@ export type Database = {
           carrier_pseudo: string | null
           created_at: string | null
           customer_distance: number | null
+          dest_city: string | null
+          dest_precipitation_mm: number | null
+          dest_snowfall_cm: number | null
+          dest_wind_speed_kmh: number | null
           dest_zip_3d: string | null
           distance_bucket: string | null
           goal_transit_days: number | null
@@ -67,6 +71,10 @@ export type Database = {
           lane_id: string | null
           lane_zip3_pair: string | null
           load_id_pseudo: string | null
+          origin_city: string | null
+          origin_precipitation_mm: number | null
+          origin_snowfall_cm: number | null
+          origin_wind_speed_kmh: number | null
           origin_zip_3d: string | null
           otd_designation: string | null
           ship_dow: number | null
@@ -84,6 +92,10 @@ export type Database = {
           carrier_pseudo?: string | null
           created_at?: string | null
           customer_distance?: number | null
+          dest_city?: string | null
+          dest_precipitation_mm?: number | null
+          dest_snowfall_cm?: number | null
+          dest_wind_speed_kmh?: number | null
           dest_zip_3d?: string | null
           distance_bucket?: string | null
           goal_transit_days?: number | null
@@ -91,6 +103,10 @@ export type Database = {
           lane_id?: string | null
           lane_zip3_pair?: string | null
           load_id_pseudo?: string | null
+          origin_city?: string | null
+          origin_precipitation_mm?: number | null
+          origin_snowfall_cm?: number | null
+          origin_wind_speed_kmh?: number | null
           origin_zip_3d?: string | null
           otd_designation?: string | null
           ship_dow?: number | null
@@ -108,6 +124,10 @@ export type Database = {
           carrier_pseudo?: string | null
           created_at?: string | null
           customer_distance?: number | null
+          dest_city?: string | null
+          dest_precipitation_mm?: number | null
+          dest_snowfall_cm?: number | null
+          dest_wind_speed_kmh?: number | null
           dest_zip_3d?: string | null
           distance_bucket?: string | null
           goal_transit_days?: number | null
@@ -115,6 +135,10 @@ export type Database = {
           lane_id?: string | null
           lane_zip3_pair?: string | null
           load_id_pseudo?: string | null
+          origin_city?: string | null
+          origin_precipitation_mm?: number | null
+          origin_snowfall_cm?: number | null
+          origin_wind_speed_kmh?: number | null
           origin_zip_3d?: string | null
           otd_designation?: string | null
           ship_dow?: number | null

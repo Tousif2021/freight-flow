@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Plus, Truck, ArrowLeft, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Plus, Truck, ArrowLeft, Menu, X, Clock, Radio, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MapView from '@/components/MapView';
 import AddressInput from '@/components/AddressInput';
@@ -11,13 +11,16 @@ import DashboardStats from '@/components/DashboardStats';
 import TrackingView from '@/components/TrackingView';
 import SuccessAnimation from '@/components/SuccessAnimation';
 import AIAdvisor from '@/components/AIAdvisor';
+import ETALoadingScreen from '@/components/ETALoadingScreen';
 import { CarrierMode, Shipment, DashboardStats as DashboardStatsType } from '@/types/shipment';
 import { calculateETA, calculateDistance, estimateBaseDuration } from '@/lib/eta-calculator';
 import { api, mockStats, mockShipments } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { TrafficIncident } from '@/components/MapView';
+
 type View = 'dashboard' | 'quote' | 'tracking';
 type QuoteStep = 'locations' | 'carrier' | 'eta' | 'checkout';
+
 const Index = () => {
   const [view, setView] = useState<View>('dashboard');
   const [quoteStep, setQuoteStep] = useState<QuoteStep>('locations');
@@ -38,6 +41,20 @@ const Index = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [newTrackingNumber, setNewTrackingNumber] = useState('');
   const [trafficIncidents, setTrafficIncidents] = useState<TrafficIncident[]>([]);
+  
+  // Loading screen state
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  
+  // Real-time clock state
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update clock every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Calculate ETA when carrier is selected
   useEffect(() => {
@@ -95,7 +112,51 @@ const Index = () => {
     label: 'New Quote',
     icon: Plus
   }];
+  // Handle Calculate ETA click
+  const handleCalculateETA = () => {
+    if (!origin || !destination || !selectedCarrier) return;
+    
+    // Show loading screen
+    setShowLoadingScreen(true);
+    
+    // Calculate ETA in background
+    const distance = calculateDistance(origin.lat, origin.lng, destination.lat, destination.lng);
+    setDistanceMiles(distance);
+    const baseDuration = estimateBaseDuration(distance);
+    const calculatedEta = calculateETA(baseDuration, selectedCarrier, origin.lat, destination.lat);
+    setEta(calculatedEta);
+  };
+
+  // Handle loading screen completion
+  const handleLoadingComplete = () => {
+    setShowLoadingScreen(false);
+    setQuoteStep('eta');
+  };
+
+  // Format time and date
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false 
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return <div className="min-h-screen bg-background">
+      {/* Loading Screen Overlay */}
+      <AnimatePresence>
+        {showLoadingScreen && <ETALoadingScreen onComplete={handleLoadingComplete} />}
+      </AnimatePresence>
+      
       {/* Success Animation Overlay */}
       <AnimatePresence>
         {showSuccess && <SuccessAnimation trackingNumber={newTrackingNumber} onContinue={handleSuccessContinue} />}
@@ -111,6 +172,29 @@ const Index = () => {
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">FreightFlow</h1>
               <p className="text-xs font-medium text-muted-foreground hidden sm:block tracking-wide uppercase">Enterprise Logistics</p>
+            </div>
+          </div>
+
+          {/* Status Bar */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* System Online */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-teal/10 rounded-full border border-teal/30">
+              <div className="w-2 h-2 rounded-full bg-teal animate-pulse" />
+              <span className="text-[10px] font-semibold text-teal uppercase tracking-wide">System Online</span>
+            </div>
+            
+            {/* Date & Time */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted/30 rounded-full border border-border/50">
+              <Clock className="w-3 h-3 text-muted-foreground" />
+              <span className="text-[10px] font-medium text-foreground tabular-nums">
+                {formatDate(currentTime)} • {formatTime(currentTime)}
+              </span>
+            </div>
+            
+            {/* API Connected */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-full border border-primary/30">
+              <Wifi className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">API Connected</span>
             </div>
           </div>
 
@@ -240,7 +324,7 @@ const Index = () => {
                             opacity: 1,
                             y: 0
                           }} className="mt-6">
-                                      <Button variant="hero" className="w-full" onClick={() => setQuoteStep('eta')}>
+                                      <Button variant="hero" className="w-full" onClick={handleCalculateETA}>
                                         Calculate ETA
                                       </Button>
                                     </motion.div>}
