@@ -63,7 +63,7 @@ const ETALoadingScreen: React.FC<ETALoadingScreenProps> = ({ onComplete }) => {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [currentStep, onComplete]);
+  }, [currentStep]);
 
   const progress = (completedSteps.length / steps.length) * 100;
 
