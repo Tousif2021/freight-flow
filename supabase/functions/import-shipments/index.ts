@@ -7,13 +7,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Parse date strings like "1/3/22 9:45" or "1/3/2022 9:45"
+// Parse date strings like "1/3/22 9:45" or "1/3/2022 9:45" or "2024-04-17 13:45:00 UTC"
 function parseDate(dateStr: string): Date | null {
   if (!dateStr || dateStr.trim() === '') return null;
   
   try {
+    const trimmed = dateStr.trim();
+    
+    // Handle ISO-like format: "2024-04-17 13:45:00 UTC"
+    if (trimmed.includes('-') && trimmed.length > 10) {
+      // Remove UTC suffix and parse
+      const cleanStr = trimmed.replace(' UTC', '').replace('UTC', '');
+      const date = new Date(cleanStr + 'Z');
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    
     // Handle format: M/D/YY H:MM or M/D/YYYY H:MM
-    const parts = dateStr.trim().split(' ');
+    const parts = trimmed.split(' ');
     if (parts.length < 2) return null;
     
     const dateParts = parts[0].split('/');
@@ -122,6 +134,15 @@ serve(async (req) => {
       'lane_zip3_pair': 'lane_zip3_pair',
       'lane_id': 'lane_id',
       'distance_bucket': 'distance_bucket',
+      // New weather and city columns
+      'origin_city': 'origin_city',
+      'dest_city': 'dest_city',
+      'origin_precipitation_mm': 'origin_precipitation_mm',
+      'origin_snowfall_cm': 'origin_snowfall_cm',
+      'origin_wind_speed_kmh': 'origin_wind_speed_kmh',
+      'dest_precipitation_mm': 'dest_precipitation_mm',
+      'dest_snowfall_cm': 'dest_snowfall_cm',
+      'dest_wind_speed_kmh': 'dest_wind_speed_kmh',
     };
 
     // Process rows in batches
@@ -148,11 +169,20 @@ serve(async (req) => {
                         'actual_transit_days', 'ship_dow', 'ship_week', 'ship_month', 
                         'ship_year', 'carrier_posted_service_days'].includes(dbColumn)) {
               record[dbColumn] = value ? parseInt(value) || null : null;
+            } else if (['origin_precipitation_mm', 'origin_snowfall_cm', 'origin_wind_speed_kmh',
+                        'dest_precipitation_mm', 'dest_snowfall_cm', 'dest_wind_speed_kmh'].includes(dbColumn)) {
+              // Handle decimal weather columns
+              record[dbColumn] = value ? parseFloat(value) || null : null;
             } else {
               record[dbColumn] = value || null;
             }
           }
         });
+        
+        // Compute lane_zip3_pair if not already set but origin_zip_3d and dest_zip_3d exist
+        if (!record.lane_zip3_pair && record.origin_zip_3d && record.dest_zip_3d) {
+          record.lane_zip3_pair = `${record.origin_zip_3d}-${record.dest_zip_3d}`;
+        }
         
         return record;
       }).filter(record => record.carrier_mode); // Filter out empty rows

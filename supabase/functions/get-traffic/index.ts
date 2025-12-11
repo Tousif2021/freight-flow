@@ -38,14 +38,77 @@ serve(async (req) => {
   }
 
   try {
-    const { originLat, originLng, destLat, destLng } = await req.json();
+    const { originLat, originLng, destLat, destLng, useMockData = true } = await req.json();
+
+    console.log(`Traffic request for route: (${originLat},${originLng}) -> (${destLat},${destLng})`);
+
+    // FOR DEMO: Return mock "heavily congested" data for all US cities
+    if (useMockData) {
+      console.log('Using mock traffic data for demo - showing heavy congestion');
+      
+      // Calculate midpoint for incident placement
+      const midLat = (originLat + destLat) / 2;
+      const midLng = (originLng + destLng) / 2;
+      
+      // Generate random number of incidents (2-5)
+      const incidentCount = Math.floor(Math.random() * 4) + 2;
+      
+      // Generate mock incidents along the route
+      const mockIncidents = [];
+      for (let i = 0; i < incidentCount; i++) {
+        const t = (i + 1) / (incidentCount + 1); // Distribute along route
+        const incidentLat = originLat + (destLat - originLat) * t + (Math.random() - 0.5) * 0.5;
+        const incidentLng = originLng + (destLng - originLng) * t + (Math.random() - 0.5) * 0.5;
+        
+        const incidentTypes = ['accident', 'congestion', 'road_works', 'lane_closure', 'hazard'];
+        const severities = ['severe', 'moderate', 'moderate', 'minor'];
+        const type = incidentTypes[Math.floor(Math.random() * incidentTypes.length)];
+        const severity = severities[Math.floor(Math.random() * severities.length)];
+        
+        mockIncidents.push({
+          id: `mock-incident-${i}`,
+          lat: incidentLat,
+          lng: incidentLng,
+          type,
+          severity,
+          description: type === 'accident' ? 'Multi-vehicle collision reported' :
+                       type === 'congestion' ? 'Heavy traffic congestion' :
+                       type === 'road_works' ? 'Road construction in progress' :
+                       type === 'lane_closure' ? 'Lane closed due to maintenance' :
+                       'Road hazard reported',
+          delay: severity === 'severe' ? 45 : severity === 'moderate' ? 20 : 10,
+          from: 'Interstate Highway',
+          to: 'Major Route',
+        });
+      }
+
+      // Mock heavily congested result
+      const mockResult = {
+        trafficScore: 75 + Math.floor(Math.random() * 20), // 75-95 (heavy congestion)
+        status: 'red' as const,
+        label: 'Heavy traffic / incidents',
+        avgCongestionPercent: 55 + Math.floor(Math.random() * 30), // 55-85%
+        incidentCount: incidentCount,
+        severeIncidentCount: mockIncidents.filter(i => i.severity === 'severe').length,
+        hasRoadClosure: Math.random() > 0.7, // 30% chance of road closure
+        flowDataPoints: 3,
+        incidents: mockIncidents,
+        isMockData: true,
+      };
+
+      console.log('Mock traffic result:', mockResult);
+
+      return new Response(JSON.stringify(mockResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // REAL API CALL (kept for reference but not used in demo)
     const apiKey = Deno.env.get('TOMTOM_API_KEY');
 
     if (!apiKey) {
       throw new Error('TOMTOM_API_KEY not configured');
     }
-
-    console.log(`Fetching traffic data for route: (${originLat},${originLng}) -> (${destLat},${destLng})`);
 
     // Calculate midpoint for traffic flow sampling
     const midLat = (originLat + destLat) / 2;
@@ -212,6 +275,7 @@ serve(async (req) => {
       hasRoadClosure,
       flowDataPoints: validFlowCount,
       incidents: processedIncidents,
+      isMockData: false,
     };
 
     console.log('Traffic result:', result);

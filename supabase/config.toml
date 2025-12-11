@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.get-traffic]
 verify_jwt = false
+
+[functions.get-lane-statistics]
+verify_jwt = false
