@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { motion } from "framer-motion";
 
-mapboxgl.accessToken = 'pk.eyJ1IjoidG91c2lmMjUiLCJhIjoiY21peDI1dGpxMDF2aTNkcXN1NzMyajhtOCJ9.GB70BEjjqbc8kXnGMA4uTQ';
+mapboxgl.accessToken = "pk.eyJ1IjoidG91c2lmMjUiLCJhIjoiY21peDI1dGpxMDF2aTNkcXN1NzMyajhtOCJ9.GB70BEjjqbc8kXnGMA4uTQ";
 
 export interface TrafficIncident {
   id: string;
   lat: number;
   lng: number;
   type: string;
-  severity: 'minor' | 'moderate' | 'severe';
+  severity: "minor" | "moderate" | "severe";
   description: string;
   delay: number;
   from?: string;
@@ -37,9 +37,9 @@ const MapView: React.FC<MapViewProps> = ({
   incidents = [],
   showRoute = false,
   showAlternativeRoute = false,
-  alternativeRouteReason = 'Road Closure Ahead',
+  alternativeRouteReason = "Road Closure Ahead",
   interactive = true,
-  className = '',
+  className = "",
   onMapLoad,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -49,20 +49,20 @@ const MapView: React.FC<MapViewProps> = ({
   const incidentMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const alternativeRouteMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const clearMarkers = useCallback(() => {
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
   }, []);
 
   const clearIncidentMarkers = useCallback(() => {
-    incidentMarkersRef.current.forEach(marker => marker.remove());
+    incidentMarkersRef.current.forEach((marker) => marker.remove());
     incidentMarkersRef.current = [];
   }, []);
 
-  const createMarkerElement = (type: 'origin' | 'destination' | 'current') => {
-    const el = document.createElement('div');
-    el.className = 'flex items-center justify-center';
-    
-    if (type === 'origin') {
+  const createMarkerElement = (type: "origin" | "destination" | "current") => {
+    const el = document.createElement("div");
+    el.className = "flex items-center justify-center";
+
+    if (type === "origin") {
       el.innerHTML = `
         <div class="relative">
           <div class="w-6 h-6 bg-success rounded-full flex items-center justify-center shadow-lg">
@@ -71,7 +71,7 @@ const MapView: React.FC<MapViewProps> = ({
           <div class="absolute -inset-2 bg-success/30 rounded-full animate-ping"></div>
         </div>
       `;
-    } else if (type === 'destination') {
+    } else if (type === "destination") {
       el.innerHTML = `
         <div class="relative">
           <div class="w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/50" style="animation: destination-pulse 2s ease-in-out infinite;">
@@ -89,53 +89,57 @@ const MapView: React.FC<MapViewProps> = ({
         <div class="marker-pulse"></div>
       `;
     }
-    
+
     return el;
   };
 
   const createIncidentMarkerElement = (incident: TrafficIncident) => {
-    const el = document.createElement('div');
-    el.className = 'flex items-center justify-center cursor-pointer';
-    
+    const el = document.createElement("div");
+    el.className = "flex items-center justify-center cursor-pointer";
+
     const colorMap = {
-      minor: { bg: '#EAB308', border: '#CA8A04', shadow: 'rgba(234,179,8,0.4)' },
-      moderate: { bg: '#F97316', border: '#EA580C', shadow: 'rgba(249,115,22,0.4)' },
-      severe: { bg: '#EF4444', border: '#DC2626', shadow: 'rgba(239,68,68,0.5)' },
+      minor: { bg: "#EAB308", border: "#CA8A04", shadow: "rgba(234,179,8,0.4)" },
+      moderate: { bg: "#F97316", border: "#EA580C", shadow: "rgba(249,115,22,0.4)" },
+      severe: { bg: "#EF4444", border: "#DC2626", shadow: "rgba(239,68,68,0.5)" },
     };
-    
+
     const colors = colorMap[incident.severity];
-    
+
     const iconMap: Record<string, string> = {
-      accident: '🚗',
-      construction: '🚧',
-      road_closure: '⛔',
-      road_works: '🔨',
-      congestion: '🚦',
-      hazard: '⚠️',
-      flooding: '🌊',
-      fog: '🌫️',
-      wind: '💨',
-      broken_down_vehicle: '🚙',
-      lane_closure: '🚧',
-      detour: '↪️',
-      incident: '⚠️',
+      accident: "🚗",
+      construction: "🚧",
+      road_closure: "⛔",
+      road_works: "🔨",
+      congestion: "🚦",
+      hazard: "⚠️",
+      flooding: "🌊",
+      fog: "🌫️",
+      wind: "💨",
+      broken_down_vehicle: "🚙",
+      lane_closure: "🚧",
+      detour: "↪️",
+      incident: "⚠️",
     };
-    
-    const icon = iconMap[incident.type] || '⚠️';
-    
+
+    const icon = iconMap[incident.type] || "⚠️";
+
     el.innerHTML = `
       <div class="relative group">
         <div class="w-7 h-7 rounded-full flex items-center justify-center shadow-lg transform transition-transform hover:scale-110" 
              style="background: ${colors.bg}; border: 2px solid ${colors.border}; box-shadow: 0 0 12px ${colors.shadow};">
           <span class="text-xs">${icon}</span>
         </div>
-        ${incident.severity === 'severe' ? `
+        ${
+          incident.severity === "severe"
+            ? `
           <div class="absolute -inset-1 rounded-full animate-ping opacity-40" 
                style="background: ${colors.bg};"></div>
-        ` : ''}
+        `
+            : ""
+        }
       </div>
     `;
-    
+
     return el;
   };
 
@@ -144,19 +148,16 @@ const MapView: React.FC<MapViewProps> = ({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: "mapbox://styles/mapbox/dark-v11",
       center: [-98.5795, 39.8283], // Center of US
       zoom: 3.5,
       pitch: 0,
       interactive,
     });
 
-    map.current.addControl(
-      new mapboxgl.NavigationControl({ visualizePitch: false }),
-      'top-right'
-    );
+    map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
 
-    map.current.on('load', () => {
+    map.current.on("load", () => {
       setIsLoaded(true);
       onMapLoad?.();
     });
@@ -176,39 +177,41 @@ const MapView: React.FC<MapViewProps> = ({
 
     // Add origin marker
     if (origin) {
-      const marker = new mapboxgl.Marker({ element: createMarkerElement('origin') })
+      const marker = new mapboxgl.Marker({ element: createMarkerElement("origin") })
         .setLngLat([origin.lng, origin.lat])
         .addTo(map.current);
-      
+
       if (origin.label) {
         marker.setPopup(
-          new mapboxgl.Popup({ offset: 25, closeButton: false })
-            .setHTML(`<div class="font-semibold text-sm">${origin.label}</div>`)
+          new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(
+            `<div class="font-semibold text-sm">${origin.label}</div>`,
+          ),
         );
       }
-      
+
       markersRef.current.push(marker);
     }
 
     // Add destination marker
     if (destination) {
-      const marker = new mapboxgl.Marker({ element: createMarkerElement('destination') })
+      const marker = new mapboxgl.Marker({ element: createMarkerElement("destination") })
         .setLngLat([destination.lng, destination.lat])
         .addTo(map.current);
-      
+
       if (destination.label) {
         marker.setPopup(
-          new mapboxgl.Popup({ offset: 25, closeButton: false })
-            .setHTML(`<div class="font-semibold text-sm">${destination.label}</div>`)
+          new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(
+            `<div class="font-semibold text-sm">${destination.label}</div>`,
+          ),
         );
       }
-      
+
       markersRef.current.push(marker);
     }
 
     // Add current location marker (for tracking)
     if (currentLocation) {
-      const marker = new mapboxgl.Marker({ element: createMarkerElement('current') })
+      const marker = new mapboxgl.Marker({ element: createMarkerElement("current") })
         .setLngLat([currentLocation.lng, currentLocation.lat])
         .addTo(map.current);
       markersRef.current.push(marker);
@@ -240,7 +243,7 @@ const MapView: React.FC<MapViewProps> = ({
       if (currentLocation) {
         bounds.extend([currentLocation.lng, currentLocation.lat]);
       }
-      
+
       map.current.fitBounds(bounds, {
         padding: { top: 100, bottom: 100, left: 100, right: 100 },
         duration: 1000,
@@ -256,31 +259,29 @@ const MapView: React.FC<MapViewProps> = ({
 
     incidents.forEach((incident) => {
       if (!incident.lat || !incident.lng) return;
-      
+
       const el = createIncidentMarkerElement(incident);
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([incident.lng, incident.lat])
-        .addTo(map.current!);
+      const marker = new mapboxgl.Marker({ element: el }).setLngLat([incident.lng, incident.lat]).addTo(map.current!);
 
       // Add popup with incident details
-      const popup = new mapboxgl.Popup({ 
-        offset: 25, 
+      const popup = new mapboxgl.Popup({
+        offset: 25,
         closeButton: false,
-        className: 'incident-popup'
+        className: "incident-popup",
       }).setHTML(`
         <div class="p-2 max-w-[200px]">
-          <div class="font-bold text-sm mb-1 capitalize">${incident.type.replace('_', ' ')}</div>
+          <div class="font-bold text-sm mb-1 capitalize">${incident.type.replace("_", " ")}</div>
           <div class="text-xs text-gray-300 mb-1">${incident.description}</div>
-          ${incident.delay > 0 ? `<div class="text-xs text-amber-400">Delay: ~${Math.round(incident.delay / 60)} min</div>` : ''}
-          ${incident.from ? `<div class="text-[10px] text-gray-400 mt-1">${incident.from}${incident.to ? ` → ${incident.to}` : ''}</div>` : ''}
+          ${incident.delay > 0 ? `<div class="text-xs text-amber-400">Delay: ~${Math.round(incident.delay / 60)} min</div>` : ""}
+          ${incident.from ? `<div class="text-[10px] text-gray-400 mt-1">${incident.from}${incident.to ? ` → ${incident.to}` : ""}</div>` : ""}
         </div>
       `);
 
       marker.setPopup(popup);
-      
+
       // Show popup on hover
-      el.addEventListener('mouseenter', () => marker.togglePopup());
-      el.addEventListener('mouseleave', () => marker.togglePopup());
+      el.addEventListener("mouseenter", () => marker.togglePopup());
+      el.addEventListener("mouseleave", () => marker.togglePopup());
 
       incidentMarkersRef.current.push(marker);
     });
@@ -288,8 +289,8 @@ const MapView: React.FC<MapViewProps> = ({
 
   // Helper to create alternative route marker element
   const createAlternativeRouteMarker = (reason: string) => {
-    const el = document.createElement('div');
-    el.className = 'flex items-center justify-center';
+    const el = document.createElement("div");
+    el.className = "flex items-center justify-center";
     el.innerHTML = `
       <div class="relative">
         <div class="bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-red-400/50 transform -translate-y-2">
@@ -308,11 +309,11 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     if (!map.current || !isLoaded || !showRoute || !origin || !destination) return;
 
-    const sourceId = 'route';
-    const layerId = 'route-line';
-    const glowLayerId = 'route-glow';
-    const altSourceId = 'alternative-route';
-    const altLayerId = 'alternative-route-line';
+    const sourceId = "route";
+    const layerId = "route-line";
+    const glowLayerId = "route-glow";
+    const altSourceId = "alternative-route";
+    const altLayerId = "alternative-route-line";
 
     // Remove existing route layers
     if (map.current.getLayer(layerId)) {
@@ -330,7 +331,7 @@ const MapView: React.FC<MapViewProps> = ({
     if (map.current.getSource(altSourceId)) {
       map.current.removeSource(altSourceId);
     }
-    
+
     // Remove alternative route marker
     if (alternativeRouteMarkerRef.current) {
       alternativeRouteMarkerRef.current.remove();
@@ -341,21 +342,21 @@ const MapView: React.FC<MapViewProps> = ({
     const fetchRoute = async () => {
       try {
         const response = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&alternatives=true&access_token=${mapboxgl.accessToken}`
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&alternatives=true&access_token=${mapboxgl.accessToken}`,
         );
         const data = await response.json();
-        
+
         if (data.routes && data.routes[0]) {
           const optimalRoute = data.routes[0].geometry;
-          
+
           // Add alternative route first (so it renders below optimal route)
           if (showAlternativeRoute && data.routes.length > 1) {
             const alternativeRoute = data.routes[1].geometry;
-            
+
             map.current!.addSource(altSourceId, {
-              type: 'geojson',
+              type: "geojson",
               data: {
-                type: 'Feature',
+                type: "Feature",
                 properties: {},
                 geometry: alternativeRoute,
               },
@@ -364,17 +365,17 @@ const MapView: React.FC<MapViewProps> = ({
             // Alternative route - dashed, gray, faded
             map.current!.addLayer({
               id: altLayerId,
-              type: 'line',
+              type: "line",
               source: altSourceId,
               layout: {
-                'line-join': 'round',
-                'line-cap': 'round',
+                "line-join": "round",
+                "line-cap": "round",
               },
               paint: {
-                'line-color': '#6B7280',
-                'line-width': 3,
-                'line-opacity': 0.4,
-                'line-dasharray': [2, 2],
+                "line-color": "#9A3412",
+                "line-width": 3,
+                "line-opacity": 0.4,
+                "line-dasharray": [2, 2],
               },
             });
 
@@ -382,7 +383,7 @@ const MapView: React.FC<MapViewProps> = ({
             const coords = alternativeRoute.coordinates;
             const midIndex = Math.floor(coords.length / 2);
             const midpoint = coords[midIndex];
-            
+
             if (midpoint) {
               const markerEl = createAlternativeRouteMarker(alternativeRouteReason);
               alternativeRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
@@ -393,9 +394,9 @@ const MapView: React.FC<MapViewProps> = ({
 
           // Add optimal route source
           map.current!.addSource(sourceId, {
-            type: 'geojson',
+            type: "geojson",
             data: {
-              type: 'Feature',
+              type: "Feature",
               properties: {},
               geometry: optimalRoute,
             },
@@ -404,38 +405,38 @@ const MapView: React.FC<MapViewProps> = ({
           // Glow effect layer for optimal route
           map.current!.addLayer({
             id: glowLayerId,
-            type: 'line',
+            type: "line",
             source: sourceId,
             layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
+              "line-join": "round",
+              "line-cap": "round",
             },
             paint: {
-              'line-color': '#FFC72C',
-              'line-width': 12,
-              'line-opacity': 0.3,
-              'line-blur': 8,
+              "line-color": "#FFC72C",
+              "line-width": 12,
+              "line-opacity": 0.3,
+              "line-blur": 8,
             },
           });
 
           // Main optimal route line
           map.current!.addLayer({
             id: layerId,
-            type: 'line',
+            type: "line",
             source: sourceId,
             layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
+              "line-join": "round",
+              "line-cap": "round",
             },
             paint: {
-              'line-color': '#FFC72C',
-              'line-width': 4,
-              'line-opacity': 1,
+              "line-color": "#FFC72C",
+              "line-width": 4,
+              "line-opacity": 1,
             },
           });
         }
       } catch (error) {
-        console.error('Error fetching route:', error);
+        console.error("Error fetching route:", error);
       }
     };
 
@@ -443,7 +444,7 @@ const MapView: React.FC<MapViewProps> = ({
   }, [origin, destination, showRoute, showAlternativeRoute, alternativeRouteReason, isLoaded]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
