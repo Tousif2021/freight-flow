@@ -380,7 +380,7 @@ const Index = () => {
                   lat: destination.lat,
                   lng: destination.lng,
                   label: destination.city
-                } : undefined} incidents={trafficIncidents} showRoute={!!origin && !!destination} />
+                } : undefined} incidents={trafficIncidents} showRoute={!!origin && !!destination} showAlternativeRoute={quoteStep === 'eta'} alternativeRouteReason="Road Closure Ahead" />
                     {/* AI Advisor Popup */}
                     {quoteStep === 'eta' && eta && <AIAdvisor eta={eta} carrierMode={selectedCarrier} onCarrierChange={carrier => setSelectedCarrier(carrier)} />}
                   </div>

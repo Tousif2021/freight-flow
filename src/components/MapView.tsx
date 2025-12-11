@@ -23,6 +23,8 @@ interface MapViewProps {
   currentLocation?: { lat: number; lng: number };
   incidents?: TrafficIncident[];
   showRoute?: boolean;
+  showAlternativeRoute?: boolean;
+  alternativeRouteReason?: string;
   interactive?: boolean;
   className?: string;
   onMapLoad?: () => void;
@@ -34,6 +36,8 @@ const MapView: React.FC<MapViewProps> = ({
   currentLocation,
   incidents = [],
   showRoute = false,
+  showAlternativeRoute = false,
+  alternativeRouteReason = 'Road Closure Ahead',
   interactive = true,
   className = '',
   onMapLoad,
@@ -43,7 +47,7 @@ const MapView: React.FC<MapViewProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const incidentMarkersRef = useRef<mapboxgl.Marker[]>([]);
-
+  const alternativeRouteMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
@@ -282,6 +286,24 @@ const MapView: React.FC<MapViewProps> = ({
     });
   }, [incidents, isLoaded, clearIncidentMarkers]);
 
+  // Helper to create alternative route marker element
+  const createAlternativeRouteMarker = (reason: string) => {
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-center';
+    el.innerHTML = `
+      <div class="relative">
+        <div class="bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-red-400/50 transform -translate-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-white text-xs">⛔</span>
+            <span class="text-white text-xs font-semibold whitespace-nowrap">${reason}</span>
+          </div>
+        </div>
+        <div class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-red-500/90"></div>
+      </div>
+    `;
+    return el;
+  };
+
   // Draw route
   useEffect(() => {
     if (!map.current || !isLoaded || !showRoute || !origin || !destination) return;
@@ -289,6 +311,8 @@ const MapView: React.FC<MapViewProps> = ({
     const sourceId = 'route';
     const layerId = 'route-line';
     const glowLayerId = 'route-glow';
+    const altSourceId = 'alternative-route';
+    const altLayerId = 'alternative-route-line';
 
     // Remove existing route layers
     if (map.current.getLayer(layerId)) {
@@ -297,31 +321,87 @@ const MapView: React.FC<MapViewProps> = ({
     if (map.current.getLayer(glowLayerId)) {
       map.current.removeLayer(glowLayerId);
     }
+    if (map.current.getLayer(altLayerId)) {
+      map.current.removeLayer(altLayerId);
+    }
     if (map.current.getSource(sourceId)) {
       map.current.removeSource(sourceId);
+    }
+    if (map.current.getSource(altSourceId)) {
+      map.current.removeSource(altSourceId);
+    }
+    
+    // Remove alternative route marker
+    if (alternativeRouteMarkerRef.current) {
+      alternativeRouteMarkerRef.current.remove();
+      alternativeRouteMarkerRef.current = null;
     }
 
     // Fetch route from Mapbox Directions API
     const fetchRoute = async () => {
       try {
         const response = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&alternatives=true&access_token=${mapboxgl.accessToken}`
         );
         const data = await response.json();
         
         if (data.routes && data.routes[0]) {
-          const route = data.routes[0].geometry;
+          const optimalRoute = data.routes[0].geometry;
+          
+          // Add alternative route first (so it renders below optimal route)
+          if (showAlternativeRoute && data.routes.length > 1) {
+            const alternativeRoute = data.routes[1].geometry;
+            
+            map.current!.addSource(altSourceId, {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: alternativeRoute,
+              },
+            });
 
+            // Alternative route - dashed, gray, faded
+            map.current!.addLayer({
+              id: altLayerId,
+              type: 'line',
+              source: altSourceId,
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round',
+              },
+              paint: {
+                'line-color': '#6B7280',
+                'line-width': 3,
+                'line-opacity': 0.4,
+                'line-dasharray': [2, 2],
+              },
+            });
+
+            // Add marker at midpoint of alternative route
+            const coords = alternativeRoute.coordinates;
+            const midIndex = Math.floor(coords.length / 2);
+            const midpoint = coords[midIndex];
+            
+            if (midpoint) {
+              const markerEl = createAlternativeRouteMarker(alternativeRouteReason);
+              alternativeRouteMarkerRef.current = new mapboxgl.Marker({ element: markerEl })
+                .setLngLat([midpoint[0], midpoint[1]])
+                .addTo(map.current!);
+            }
+          }
+
+          // Add optimal route source
           map.current!.addSource(sourceId, {
             type: 'geojson',
             data: {
               type: 'Feature',
               properties: {},
-              geometry: route,
+              geometry: optimalRoute,
             },
           });
 
-          // Glow effect layer
+          // Glow effect layer for optimal route
           map.current!.addLayer({
             id: glowLayerId,
             type: 'line',
@@ -338,7 +418,7 @@ const MapView: React.FC<MapViewProps> = ({
             },
           });
 
-          // Main route line
+          // Main optimal route line
           map.current!.addLayer({
             id: layerId,
             type: 'line',
@@ -360,7 +440,7 @@ const MapView: React.FC<MapViewProps> = ({
     };
 
     fetchRoute();
-  }, [origin, destination, showRoute, isLoaded]);
+  }, [origin, destination, showRoute, showAlternativeRoute, alternativeRouteReason, isLoaded]);
 
   return (
     <motion.div 
