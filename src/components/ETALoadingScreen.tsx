@@ -9,7 +9,7 @@ interface ETALoadingScreenProps {
 const steps = [
   {
     id: "historical",
-    label: "Analyzing 70,000+ historical shipment records",
+    label: "Optimizing route model with past performance",
     icon: Database,
     duration: 1050,
   },
