@@ -41,7 +41,7 @@ const OrderStatusPage: React.FC<OrderStatusPageProps> = ({ shipment, onBack }) =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="space-y-6"
+      className="space-y-6 max-w-7xl mx-auto px-4"
     >
       {/* Back Button */}
       <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2">
