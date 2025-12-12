@@ -33,7 +33,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
 
         {/* Top wave */}
         <svg
-          className="absolute top-0 left-0 w-full h-full opacity-[0.08]"
+          className="absolute top-0 left-0 w-screen h-full opacity-[0.08]"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
@@ -46,7 +46,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
 
         {/* Primary wave - full page */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-[0.10]"
+          className="absolute inset-0 w-screen h-full opacity-[0.10]"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
@@ -59,7 +59,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
 
         {/* Secondary wave - full page */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-[0.06]"
+          className="absolute inset-0 w-screen h-full opacity-[0.06]"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
