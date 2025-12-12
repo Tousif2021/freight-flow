@@ -19,7 +19,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-screen flex items-center justify-center overflow-x-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* ================= FULL-PAGE SVG BACKGROUND ================= */}
       <div className="fixed inset-0 w-screen h-screen overflow-hidden -z-10">
         {/* Base gradient */}
