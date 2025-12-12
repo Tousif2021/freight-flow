@@ -19,9 +19,9 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen w-screen flex items-center justify-center overflow-x-hidden">
       {/* ================= FULL-PAGE SVG BACKGROUND ================= */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden -z-10">
         {/* Base gradient */}
         <div
           className="absolute inset-0"
@@ -76,11 +76,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
           viewBox="0 0 1440 400"
           preserveAspectRatio="none"
         >
-          <path
-            d="M0,100 C480,200 960,50 1440,150 L1440,400 L0,400 Z"
-            fill="currentColor"
-            className="text-primary"
-          />
+          <path d="M0,100 C480,200 960,50 1440,150 L1440,400 L0,400 Z" fill="currentColor" className="text-primary" />
         </svg>
 
         {/* Central radial glow behind search */}
@@ -96,16 +92,16 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
       <motion.div
         className="absolute top-[30%] pointer-events-none"
         initial={{ x: "-200px", opacity: 0 }}
-        animate={{ 
+        animate={{
           x: ["calc(-200px)", "calc(100vw + 200px)"],
-          opacity: [0, 0.04, 0.04, 0]
+          opacity: [0, 0.04, 0.04, 0],
         }}
         transition={{
           duration: 12,
           ease: "linear",
           repeat: Infinity,
           repeatDelay: 8,
-          times: [0, 0.1, 0.9, 1]
+          times: [0, 0.1, 0.9, 1],
         }}
       >
         <Truck className="w-40 h-40 text-foreground" strokeWidth={0.5} />
@@ -115,9 +111,9 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
       <motion.div
         className="absolute top-[60%] pointer-events-none"
         initial={{ x: "calc(100vw + 100px)", opacity: 0 }}
-        animate={{ 
+        animate={{
           x: ["calc(100vw + 100px)", "-200px"],
-          opacity: [0, 0.03, 0.03, 0]
+          opacity: [0, 0.03, 0.03, 0],
         }}
         transition={{
           duration: 15,
@@ -125,7 +121,7 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
           repeat: Infinity,
           repeatDelay: 12,
           delay: 5,
-          times: [0, 0.1, 0.9, 1]
+          times: [0, 0.1, 0.9, 1],
         }}
       >
         <Package className="w-28 h-28 text-foreground" strokeWidth={0.5} />
@@ -183,18 +179,18 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
       >
         {/* Heading with text shadow */}
         <div className="text-center mb-14">
-          <h1 
+          <h1
             className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4"
             style={{
-              textShadow: "0 2px 20px hsl(var(--background) / 0.5)"
+              textShadow: "0 2px 20px hsl(var(--background) / 0.5)",
             }}
           >
             Track your shipment
           </h1>
-          <p 
+          <p
             className="text-lg md:text-xl text-muted-foreground"
             style={{
-              textShadow: "0 1px 10px hsl(var(--background) / 0.3)"
+              textShadow: "0 1px 10px hsl(var(--background) / 0.3)",
             }}
           >
             See where your delivery is — and what's affecting its arrival
@@ -204,13 +200,13 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
         {/* Search with glow effect */}
         <form onSubmit={handleSubmit} className="relative">
           {/* Glow behind input */}
-          <div 
+          <div
             className="absolute inset-0 -m-4 rounded-full blur-2xl opacity-30"
             style={{
-              background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.4) 0%, transparent 70%)"
+              background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.4) 0%, transparent 70%)",
             }}
           />
-          
+
           <div className="relative flex items-center bg-background/80 backdrop-blur-sm border border-border/60 rounded-full p-2 shadow-2xl shadow-black/20 focus-within:border-primary/60 focus-within:shadow-primary/20 transition-all duration-300">
             <Input
               type="text"
