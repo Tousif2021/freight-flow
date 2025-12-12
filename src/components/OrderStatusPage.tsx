@@ -90,7 +90,8 @@ const OrderStatusPage: React.FC<OrderStatusPageProps> = ({ shipment, onBack }) =
             currentLocation={shipment.currentLocation}
             incidents={incidents}
             showRoute={true}
-            showAlternativeRoute={false}
+            showAlternativeRoute={true}
+            alternativeRouteReason={incidents[0]?.description || "Road Closure Detected"}
           />
         </div>
       </div>
