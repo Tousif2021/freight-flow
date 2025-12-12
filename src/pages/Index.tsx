@@ -4,9 +4,7 @@ import ShipmentSearch from "@/components/ShipmentSearch";
 import OrderStatusPage from "@/components/OrderStatusPage";
 import { TrackedShipment } from "@/types/tracking";
 import { findShipment } from "@/lib/sample-shipment";
-
 type View = "search" | "tracking";
-
 const Index = () => {
   const [view, setView] = useState<View>("search");
   const [trackedShipment, setTrackedShipment] = useState<TrackedShipment | null>(null);
@@ -21,7 +19,6 @@ const Index = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
   const handleSearch = (trackingNumber: string) => {
     const shipment = findShipment(trackingNumber);
     if (shipment) {
@@ -29,7 +26,6 @@ const Index = () => {
       setView("tracking");
     }
   };
-
   const handleBack = () => {
     setView("search");
     setTrackedShipment(null);
@@ -44,7 +40,6 @@ const Index = () => {
       hour12: false
     });
   };
-  
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -52,18 +47,12 @@ const Index = () => {
       year: "numeric"
     });
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img 
-              alt="FreightFlow" 
-              src="/lovable-uploads/27136723-d33d-47dc-820c-d4c1bb0980ed.png" 
-              className="h-10 w-auto object-contain border-0 shadow-sm" 
-            />
+            <img alt="FreightFlow" src="/lovable-uploads/27136723-d33d-47dc-820c-d4c1bb0980ed.png" className="h-10 w-auto object-contain border-0 shadow-sm" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">FreightFlow</h1>
               <p className="text-xs font-medium text-muted-foreground hidden sm:block tracking-wide uppercase">
@@ -87,39 +76,38 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="pt-20 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-0 py-0">
           <AnimatePresence mode="wait">
             {/* Search View */}
-            {view === "search" && (
-              <motion.div
-                key="search"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+            {view === "search" && <motion.div key="search" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
                 <ShipmentSearch onSearch={handleSearch} />
-              </motion.div>
-            )}
+              </motion.div>}
 
             {/* Tracking View */}
-            {view === "tracking" && trackedShipment && (
-              <motion.div
-                key="tracking"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <OrderStatusPage 
-                  shipment={trackedShipment} 
-                  onBack={handleBack}
-                />
-              </motion.div>
-            )}
+            {view === "tracking" && trackedShipment && <motion.div key="tracking" initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }}>
+                <OrderStatusPage shipment={trackedShipment} onBack={handleBack} />
+              </motion.div>}
           </AnimatePresence>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
