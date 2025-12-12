@@ -54,4 +54,11 @@ export interface TrackedShipment {
     lat: number;
     lng: number;
   };
+  distanceMiles: number;
+  baseDurationHours: number;
+  weatherDelay: {
+    delayMinutes: number;
+    condition: string;
+    hasImpact: boolean;
+  };
 }
