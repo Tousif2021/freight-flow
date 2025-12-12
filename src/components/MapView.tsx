@@ -508,6 +508,35 @@ const MapView: React.FC<MapViewProps> = ({
         </div>
       )}
       <div className="absolute inset-0 pointer-events-none rounded-xl ring-1 ring-border/50" />
+      
+      {/* API Integration Badges */}
+      {isLoaded && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+          className="absolute bottom-4 left-4 flex flex-col gap-2 z-10"
+        >
+          {/* TomTom Traffic Badge */}
+          <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-border/50 shadow-lg">
+            <div className="relative flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-red-500 animate-ping opacity-50" />
+            </div>
+            <span className="text-[10px] font-medium text-muted-foreground">TomTom Traffic</span>
+            <div className="h-3 w-px bg-border/50" />
+            <span className="text-[10px] font-semibold text-primary">LIVE</span>
+          </div>
+          
+          {/* OpenWeather Badge */}
+          <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-border/50 shadow-lg">
+            <span className="text-xs">☁️</span>
+            <span className="text-[10px] font-medium text-muted-foreground">OpenWeather</span>
+            <div className="h-3 w-px bg-border/50" />
+            <span className="text-[10px] font-semibold text-success">Connected</span>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
