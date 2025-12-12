@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Server } from "lucide-react";
 import ShipmentSearch from "@/components/ShipmentSearch";
 import OrderStatusPage from "@/components/OrderStatusPage";
 import { TrackedShipment } from "@/types/tracking";
@@ -73,29 +72,15 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Status Bar */}
-          <div className="hidden lg:flex items-center gap-2">
-            {/* System Online */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-teal/10 rounded-full border border-teal/30">
-              <div className="w-2 h-2 rounded-full bg-teal animate-pulse" />
-              <span className="text-[10px] font-semibold text-teal uppercase tracking-wide">System Online</span>
+          {/* Subtle Status Indicators */}
+          <div className="hidden md:flex items-center gap-3 text-muted-foreground/50">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-teal/70" />
+              <span className="text-[10px] font-medium uppercase tracking-wide">Online</span>
             </div>
-
-            {/* Date & Time */}
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-500/10 border border-white/25 rounded-full">
-              <div className="w-3 h-3 rounded-full bg-white/30 flex items-center justify-center">
-                <Clock className="w-2 h-2 text-white/80" />
-              </div>
-              <span className="text-[10px] font-semibold text-white/70 tracking-wide tabular-nums">
-                {formatDate(currentTime)} • {formatTime(currentTime)}
-              </span>
-            </div>
-
-            {/* API Services Online */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full">
-              <Server className="w-3 h-3 text-blue-400 animate-pulse" />
-              <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-wide">API Connected</span>
-            </div>
+            <span className="text-[11px] tabular-nums">
+              {formatDate(currentTime)} • {formatTime(currentTime)}
+            </span>
           </div>
         </div>
       </header>

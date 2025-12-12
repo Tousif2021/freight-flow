@@ -92,44 +92,57 @@ const ShipmentSearch: React.FC<ShipmentSearchProps> = ({ onSearch }) => {
           onSubmit={handleSubmit}
           className="relative"
         >
-          <div className="glass-card p-2 flex items-center gap-2">
-            <div className="flex-1 relative">
-              <Input
-                type="text"
-                placeholder="Enter Shipment ID..."
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                className="h-14 text-lg pl-5 pr-4 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
-              />
+          {/* Search Card Container */}
+          <div className="bg-card/80 backdrop-blur-md border border-border/50 rounded-2xl p-3 shadow-lg shadow-black/10">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <Input
+                  type="text"
+                  placeholder="Enter Shipment ID…"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  className="h-14 text-lg pl-5 pr-4 bg-background/50 border-border/30 rounded-xl focus-visible:ring-primary/30 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-14 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all hover:shadow-md hover:shadow-primary/20"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Track
+              </Button>
             </div>
-            <Button
-              type="submit"
-              variant="hero"
-              size="lg"
-              className="h-14 px-8 rounded-lg"
-            >
-              <Search className="w-5 h-5 mr-2" />
-              Track
-            </Button>
           </div>
         </motion.form>
 
+        {/* Trust Microcopy */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="text-center mt-6 text-sm text-muted-foreground"
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="text-center mt-5 text-sm text-muted-foreground/70"
         >
-          Try: <button 
+          Live updates based on traffic, incidents, and delivery history.
+        </motion.p>
+
+        {/* Demo Hint */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="text-center mt-4"
+        >
+          <span className="text-sm text-muted-foreground/60">Try: </span>
+          <button 
             onClick={() => {
               setTrackingNumber('EPI20251216');
               onSearch('EPI20251216');
             }}
-            className="text-primary hover:underline font-medium"
+            className="text-sm text-primary hover:text-primary/80 font-medium transition-colors hover:underline underline-offset-2"
           >
             EPI20251216
           </button>
-        </motion.p>
+        </motion.div>
       </motion.div>
     </div>
   );
