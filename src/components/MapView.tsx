@@ -520,20 +520,23 @@ const MapView: React.FC<MapViewProps> = ({
           {/* TomTom Traffic Badge */}
           <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-border/50 shadow-lg">
             <div className="relative flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <div className="absolute inset-0 w-2 h-2 rounded-full bg-red-500 animate-ping opacity-50" />
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-500 animate-ping opacity-50" />
             </div>
             <span className="text-[10px] font-medium text-muted-foreground">TomTom Traffic</span>
             <div className="h-3 w-px bg-border/50" />
-            <span className="text-[10px] font-semibold text-primary">LIVE</span>
+            <span className="text-[10px] font-semibold text-emerald-500">LIVE</span>
           </div>
           
           {/* OpenWeather Badge */}
           <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-border/50 shadow-lg">
-            <span className="text-xs">☁️</span>
+            <div className="relative flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-500 animate-ping opacity-50" />
+            </div>
             <span className="text-[10px] font-medium text-muted-foreground">OpenWeather</span>
             <div className="h-3 w-px bg-border/50" />
-            <span className="text-[10px] font-semibold text-success">Connected</span>
+            <span className="text-[10px] font-semibold text-emerald-500">LIVE</span>
           </div>
         </motion.div>
       )}

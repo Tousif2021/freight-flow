@@ -116,6 +116,13 @@ export const sampleShipment: TrackedShipment = {
     lat: 41.5934,
     lng: -87.3464,
   },
+  distanceMiles: 355,
+  baseDurationHours: 5.7,
+  weatherDelay: {
+    delayMinutes: 0,
+    condition: 'Clear skies',
+    hasImpact: false,
+  },
 };
 
 export const findShipment = (trackingNumber: string): TrackedShipment | null => {
